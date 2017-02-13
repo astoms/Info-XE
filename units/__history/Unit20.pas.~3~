@@ -1,0 +1,53 @@
+unit Unit20;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons;
+
+type
+  TAddPlace = class(TForm)
+    Edit1: TEdit;
+    BitBtn1: TBitBtn;
+    procedure Edit1KeyPress(Sender: TObject; var Key: Char);
+    procedure FormShow(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  AddPlace: TAddPlace;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit2;
+
+procedure TAddPlace.BitBtn1Click(Sender: TObject);
+begin
+  MainForm.aPlace:=Edit1.Text;
+  Hide;
+end;
+
+procedure TAddPlace.Edit1KeyPress(Sender: TObject; var Key: Char);
+begin
+  if key=#13 then bitbtn1.Click;
+end;
+
+procedure TAddPlace.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  MainForm.aPlace:='';
+end;
+
+procedure TAddPlace.FormShow(Sender: TObject);
+begin
+  Edit1.Text:='';
+end;
+
+end.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.1.5" DataSet="MainSet" DataSetName="MainSet" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="42475,4439500926" ReportOptions.Description.Text="" ReportOptions.LastChange="42475,4904453588" ScriptLanguage="PascalScript" ScriptText.Text="&#13;&#10;begin&#13;&#10;&#13;&#10;end.">
+  <Datasets>
+    <item DataSet="MainSet" DataSetName="MainSet"/>
+  </Datasets>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="40" PaperHeight="28" PaperSize="256" LeftMargin="0" RightMargin="0" TopMargin="0" BottomMargin="0" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxBarCodeView Name="BarCode1" Left="22,67718" Top="64,25201" Width="103" Height="34,01577" BarType="bcCodeEAN13" DataField="barcode" DataSet="MainSet" DataSetName="MainSet" Rotation="0" Text="12345678" WideBarRatio="2" Zoom="1" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="0"/>
+    <TfrxMemoView Name="Memo1" Left="7,55906" Top="7,55906" Width="136,06308" Height="56,69295" DataField="name" DataSet="MainSet" DataSetName="MainSet" Font.Charset="204" Font.Color="0" Font.Height="-16" Font.Name="Times New Roman" Font.Style="0" HAlign="haBlock" ParentFont="False" Text="[MainSet.&#34;name&#34;]"/>
+  </TfrxReportPage>
+</TfrxReport>

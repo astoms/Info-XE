@@ -1,0 +1,150 @@
+unit Unit9;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons,
+  Data.DB, Vcl.Grids, Vcl.DBGrids;
+
+type
+  TScaner = class(TForm)
+    Label1: TLabel;
+    Memo1: TMemo;
+    GroupBox1: TGroupBox;
+    Label2: TLabel;
+    LabeledEdit1: TLabeledEdit;
+    LabeledEdit2: TLabeledEdit;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    Finder: TEdit;
+    GroupBox2: TGroupBox;
+    DBGrid1: TDBGrid;
+    procedure BitBtn1Click(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure BitBtn2Click(Sender: TObject);
+  private
+    article:string;
+    { Private declarations }
+  public
+    procedure Find(barcode:string);
+    { Public declarations }
+  end;
+
+var
+  Scaner: TScaner;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit2, Unit1;
+
+procedure TScaner.BitBtn1Click(Sender: TObject);
+begin
+  Scaner.Close;
+end;
+
+procedure TScaner.BitBtn2Click(Sender: TObject);
+begin
+  if article<>'' then
+  begin
+    try
+    MainForm.TreeSet.Active:=false;
+    MainForm.TreeSet.CommandText:='select d.article, d.name, d.mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+    MainForm.TreeSet.CommandText:=MainForm.TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article='''+article+'''';
+    MainForm.TreeSet.Active:=true;
+
+    MainForm.DBGrid1.DataSource.DataSet.First;
+    except
+    end;
+
+    MainForm.BitBtn4.Click;
+
+    MainForm.TreeSet.Active:=false;
+  end;
+end;
+
+procedure TScaner.Find(barcode: string);
+var amount:Currency; goods:string; k:integer;
+begin
+
+  try
+    k:=0;
+    goods:='';
+    while k<>length(Auth.GList) do
+    begin
+      goods:=goods+Auth.GList[k].num+' ,';
+      inc(k);
+    end;
+    goods:=copy(goods, 1, length(goods)-2);
+  except
+  end;
+
+  barcode:=copy(barcode, 1, 13);
+  article:='';
+  Memo1.Lines.Clear;
+  LabeledEdit1.Text:='';
+  LabeledEdit2.Text:='';
+  Label2.Caption:='';
+  try
+    MainForm.BarcodeSet.Active:=false;
+    MainForm.BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and s.barcode='''+barcode+'''';
+    MainForm.BarcodeSet.Active:=true;
+
+    MainForm.BarcodeSet.First;
+    article:=MainForm.BarcodeSet.FieldByName('article').AsString;
+    LabeledEdit1.Text:=article;
+    LabeledEdit2.Text:=barcode;
+
+    if article<>'' then
+    begin
+      DBGrid1.DataSource.DataSet:=nil;
+      MainForm.BarcodeSet.Filtered:=false;
+      MainForm.TreeModel.Active:=false;
+      MainForm.TreeModel.CommandText:='select d.article, d.name, d.mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article='''+article+'''';
+      MainForm.TreeModel.Active:=true;
+      MainForm.TreeModel.First;
+
+      Memo1.Lines.Add(MainForm.TreeModel.FieldByName('name').AsString);
+      System.SysUtils.FormatSettings.ThousandSeparator:='.';
+      System.SysUtils.FormatSettings.DecimalSeparator:='.';
+      MainForm.TreeModel.Active:=false;
+      MainForm.TreeModel.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+article+'''';
+      MainForm.TreeModel.Active:=true;
+      amount:=MainForm.TreeModel.FieldByName('price').AsFloat;
+      MainForm.TreeModel.Active:=false;
+      MainForm.TreeModel.CommandText:='select g.article, ';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+'decode(g.storeloc, ''2'', ''Маг. "Новоселкин", Минский р-н, пос. Боровая,1, 223053'', ''8'', ''Маг. "Mile", г.Минск, Долгиновский тракт,188, 220053'', ''11'', ''Маг. "Mile", г.Брест, ул. Карьерная, 9Б, 224022'',';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+' ''16'', ''Маг. "Mile", г.Могилев, Минское Шоссе,31, 212039'', ''18'', ''Маг. "Mile", г.Минск, пр-т Партизанский, 150А'',';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+' ''10'', ''Склад "Mile" Долгиновский, 220053 г.Минск, Долгиновский тракт, 188'', ''14'',';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+' ''Логистический центр "Mile", 220113 г.Минск, ул. Лукьяновича, 10'', ''15'', ''Астомстрой ЖД'', ''17'', ''Склад возврата и брака "Логистический центр", ул. Лукьяновича, 10'', ''-'') as storeloc';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+' , g.quantity, g.RESERVEDQUANTITY, g.INCOMINGQUANTITY, g.AWAITEDQUANTITY, g.FOUNDQUANTITY, sog.opersale from smgoods g, ';
+      MainForm.TreeModel.CommandText:=MainForm.TreeModel.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+article+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+article+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
+      MainForm.TreeModel.Active:=true;
+      DBGrid1.DataSource.DataSet:=MainForm.TreeModel;
+      Label2.Caption:=FloatToStrF(amount, ffNumber, 10, 2);
+    end
+    else
+    Memo1.Lines.Add('Нет информации по заданному штрих-коду!');
+  except
+    on E:Exception do ShowMessage('Ошибка: '+E.Message+'.');
+  end;
+end;
+
+procedure TScaner.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key=VK_F12 then
+  begin
+    Finder.Text:='';
+    Finder.SetFocus;
+  end;
+  if key=VK_RETURN then
+  begin
+    Find(Finder.Text);
+  end;
+end;
+
+end.

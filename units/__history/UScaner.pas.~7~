@@ -1,0 +1,66 @@
+unit UScaner;
+
+interface
+
+uses windows;
+
+type TComScanner = class
+  private
+    DCB   : TDCB;
+    hPort : THandle;
+  public
+    constructor Create(Port:string);
+    destructor Destroy();
+end;
+
+implementation
+
+{ TComScanner }
+
+procedure TComScanner.Create(Port: string);
+begin
+  // 1. Открываем файл
+  hPort := CreateFile(PChar('COM1'), GENERIC_READ + GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  // 2. Контроль ошибок
+  if hPort = INVALID_HANDLE_VALUE then
+  begin
+    exit;
+  end;
+  // 3. Чтение текущих настроек порта
+  try
+    GetCommState(hPort, DCB);
+  except
+  end;
+  // 4. Настройки:
+  // Скорость обмена
+  DCB.BaudRate := 9600;
+  // Число бит на символ
+  DCB.ByteSize := 8;
+  // Стоп-биты
+  DCB.StopBits := ONESTOPBIT;
+  // Четность
+  DCB.Parity   := NOPARITY;
+  DCB.Flags := 20625;
+  // 5. Передача настроек
+  try
+    SetCommState(hPort, DCB);
+  except
+  end;
+  // 6. Настройка буферов порта (очередей ввода и вывода)
+  try
+    SetupComm(hPort, 16, 16);
+  except
+  end;
+  // 7. Сброс буфферов и очередей
+  try
+    PurgeComm(hPort, PURGE_TXABORT or PURGE_RXABORT or PURGE_TXCLEAR or PURGE_RXCLEAR);
+  except
+  end;
+end;
+
+procedure TComScanner.Destroy;
+begin
+  CloseHandle(hPort);
+end;
+
+end.

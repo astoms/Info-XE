@@ -1,0 +1,34 @@
+unit UScaner;
+
+interface
+
+uses windows;
+
+type TComScanner = class
+  private
+    CommHandle:THandle;
+    CommThread:THandle;
+  public
+    procedure Create(Port:string);
+end;
+
+implementation
+
+{ TComScanner }
+
+procedure TComScanner.Create(Port: string);
+begin
+  {CommHandle:= CreateFile('COM1',GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL or FILE_FLAG_OVERLAPPED,0);
+  SetCommMask(CommHandle, EV_RXFLAG);
+  GetCommState(CommHandle,DCB);
+  DCB.BaudRate:=CBR_9600;
+  DCB.Parity:=NOPARITY;
+  DCB.ByteSize:=8;
+  DCB.StopBits:=OneStopBit;
+  DCB.EvtChar:=chr(13);
+  SetCommState(cId,DCB);
+  CommThread := CreateThread(nil,0,@ReadComm,nil,0,ThreadID);
+  }
+end;
+
+end.

@@ -1,0 +1,98 @@
+program InfoServ;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+uses
+  System.SysUtils, ShellAPI, Tlhelp32, Windows;
+
+function KillTask(ExeFileName: string): integer;
+const
+ PROCESS_TERMINATE=$0001;
+var
+ ContinueLoop: BOOL;
+ FSnapshotHandle: THandle;
+ FProcessEntry32: TProcessEntry32;
+begin
+ result := 0;
+
+ FSnapshotHandle := CreateToolhelp32Snapshot
+                    (TH32CS_SNAPPROCESS, 0);
+ FProcessEntry32.dwSize := Sizeof(FProcessEntry32);
+ ContinueLoop := Process32First(FSnapshotHandle,
+                                FProcessEntry32);
+
+ while integer(ContinueLoop) <> 0 do
+ begin
+   if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
+        UpperCase(ExeFileName))
+    or (UpperCase(FProcessEntry32.szExeFile) =
+        UpperCase(ExeFileName))) then
+     Result := Integer(TerminateProcess(OpenProcess(
+                       PROCESS_TERMINATE, BOOL(0),
+                       FProcessEntry32.th32ProcessID), 0));
+   ContinueLoop := Process32Next(FSnapshotHandle,
+                                 FProcessEntry32);
+ end;
+
+ CloseHandle(FSnapshotHandle);
+end;
+
+function CopyDir(fromDir, toDir: string): boolean;
+var
+  fos: TSHFileOpStruct;
+  todir2: string;
+begin
+  todir2:=todir;
+  ZeroMemory(@fos, SizeOf(fos));
+  with fos do
+  begin
+    wFunc := FO_COPY;
+    //fFlags := FOF_FILESONLY;
+    fFlags:= FOF_SIMPLEPROGRESS;
+    fflags:= fflags or FOF_NOCONFIRMATION;
+    fflags:= fflags or FOF_SILENT;
+    pFrom := PChar(fromDir + #0);
+    pTo := PChar(toDir2);
+  end;
+  Result := (0 = ShFileOperation(fos));
+end;
+
+
+begin
+  try
+    writeln('*********************************************');
+    writeln;
+  except
+  end;
+  try
+    writeln(' * Завершаем работу Info-справочник товаров');
+    KillTask('Info_XE.exe');
+  except
+  end;
+  try
+    writeln(' * Загружаем данные на компьютер');
+    if CopyDir('s:\IT-отдел\production\Info XE\*.*', GetCurrentDir) then
+    begin
+      writeln(' * Обновляем системные файлы');
+    end
+    else
+    begin
+      writeln;
+      writeln(' Ошибка обновления! Пожалуйста сообщите об этом системному администратору.');
+      readln;
+    end;
+  except
+  end;
+  try
+    writeln(' * Запускаем Info-справочник товаров');
+    WinExec('info_xe.exe', SW_SHOW);
+  except
+  end;
+  try
+    writeln;
+    writeln('*********************************************');
+  except
+  end;
+end.

@@ -1,0 +1,111 @@
+unit UScaner;
+
+interface
+
+uses
+  Dialogs, SysUtils, Classes, CPort, ExtCtrls;
+
+type
+  TStringEvent = procedure(Sender: TObject; str: string) of object;
+
+  TBarScaner = class(TComponent)
+  private
+    ComPort: TComPort;
+    RecStr: string;
+    FOnBarCode: TStringEvent;
+    TimerFinish: TTimer;
+//    function Decode: string;
+    procedure SetOnBarCode(const Value: TStringEvent);
+    procedure FireOnBarCode(Str: string);
+    procedure ComPortRxChar(Sender: TObject; Count: Integer);
+    procedure TimerFinishOnTimer(Sender: TObject);
+  protected
+  public
+    Constructor Create(AOwner: TComponent); override;
+  function Open(PortName: String): boolean;
+  published
+    property OnBarCode: TStringEvent read FOnBarCode write SetOnBarCode;
+  end;
+
+implementation
+{
+function TBarScaner.Decode: string;
+var
+  i: integer;
+begin
+  i:= pos(#13, RecStr);
+
+  if i > 0 then begin
+    Result:= Copy(RecStr, 1, i);
+    Delete(RecStr, 1, i);
+  end else Result:= '';
+end;
+  }
+procedure TBarScaner.ComPortRxChar(Sender: TObject; Count: Integer);
+var
+  str: string;
+begin
+  ComPort.ReadStr(str, Count);
+  RecStr:= RecStr + str;
+  TimerFinish.Enabled:= true;
+
+{  BarCode:= Decode();
+  if BarCode <> '' then
+    FireOnBarCode(BarCode);
+}end;
+
+procedure TBarScaner.TimerFinishOnTimer(Sender: TObject);
+var
+  BarCode: string;
+begin
+  TimerFinish.Enabled:= false;
+
+  BarCode:= RecStr;
+//  BarCode:= Decode();
+  if BarCode <> '' then begin
+    FireOnBarCode(BarCode);
+  end;
+
+  RecStr:='';
+end;
+
+constructor TBarScaner.Create(AOwner: TComponent);
+begin
+  ComPort:= TComPort.Create(self);
+
+  ComPort.Port:= 'COM1';
+  ComPort.BaudRate:= StrToBaudRate('9600');
+  ComPort.OnRxChar:= ComPortRxChar;
+  TimerFinish:= TTimer.Create(Self);
+  TimerFinish.Enabled:= false;
+  TimerFinish.OnTimer:= TimerFinishOnTimer;
+  TimerFinish.Interval:= 200;
+//  ComPort.StopBits:= StrToStopBits('1');
+
+//  ComPort.Open;
+//  ComPort.SetRTS(true);
+end;
+
+procedure TBarScaner.FireOnBarCode(Str: string);
+begin
+  if Assigned(OnBarCode)
+  then OnBarCode(Self, Str);
+end;
+
+function TBarScaner.Open(PortName: String): boolean;
+begin
+  try
+    ComPort.Port:= PortName;//'COM1';
+    ComPort.Open;
+    result:= true;
+  except
+    result:= false;
+  end;
+end;
+
+procedure TBarScaner.SetOnBarCode(const Value: TStringEvent);
+begin
+  FOnBarCode := Value;
+end;
+
+end.

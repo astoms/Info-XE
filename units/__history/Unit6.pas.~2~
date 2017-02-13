@@ -1,0 +1,34 @@
+unit Unit6;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls,
+  Vcl.Buttons, Vcl.ExtCtrls, Data.DB, Data.Win.ADODB;
+
+type
+  TChPrice = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Edit1: TEdit;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    DBGrid1: TDBGrid;
+    PriceTable: TADOTable;
+    PriceQuery: TADOQuery;
+    PriceSource: TDataSource;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  ChPrice: TChPrice;
+
+implementation
+
+{$R *.dfm}
+
+end.

@@ -1,0 +1,81 @@
+unit Unit21;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls, Vcl.Buttons;
+
+type
+  TZvMessage = class(TForm)
+    Label1: TLabel;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    procedure FormShow(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    name:string;
+    { Public declarations }
+  end;
+
+var
+  ZvMessage: TZvMessage;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit2;
+
+procedure TZvMessage.BitBtn1Click(Sender: TObject);
+begin
+  try
+    MainForm.Label10.Caption:='Документ '+IntToStr(ZvMessage.Tag)+':';
+    MainForm.Label19.Caption:=ZvMessage.name;
+    MainForm.doc_num:=IntToStr(ZvMessage.Tag);
+    MainForm.ZV_Read2.Active:=false;
+    MainForm.ZV_Read2.Active:=true;
+    MainForm.ZV_Read2.Filtered:=false;
+    MainForm.ZV_Read2.Filter:='docid='''+IntToStr(ZvMessage.Tag)+'''';
+    MainForm.ZV_Read2.Filtered:=true;
+    MainForm.Panel27.Align:=alClient;
+    MainForm.Panel27.Visible:=true;
+    try
+      MainForm.ZV_TD_Query.Active:=false;
+      MainForm.ZV_TD_Query.SQL.Clear;
+      MainForm.ZV_TD_Query.SQL.Add('select * from zv_td where id='''+MainForm.doc_num+'''');
+      MainForm.ZV_TD_Query.Active:=true;
+    except
+    end;
+    if MainForm.ZV_TD_Query.FieldByName('status').AsString='черновик' then
+    begin
+      MainForm.BitBtn29.Enabled:=true;
+      MainForm.BitBtn30.Enabled:=true;
+      MainForm.BitBtn33.Enabled:=true;
+      MainForm.BitBtn34.Enabled:=false;
+    end
+    else
+    begin
+      MainForm.BitBtn29.Enabled:=false;
+      MainForm.BitBtn30.Enabled:=false;
+      MainForm.BitBtn33.Enabled:=false;
+      MainForm.BitBtn34.Enabled:=true;
+      if MainForm.ZV_TD_Query.FieldByName('status').AsString='собрана' then
+      begin
+        MainForm.BitBtn34.Enabled:=false;
+      end;
+    end;
+  except
+  end;
+  Close();
+end;
+
+procedure TZvMessage.FormShow(Sender: TObject);
+begin
+  //AnimateWindow(Handle,500, SW_SHOWNOACTIVATE);
+end;
+
+end.

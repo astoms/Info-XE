@@ -1,0 +1,44 @@
+unit Unit19;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls;
+
+type
+  TChangeZPC = class(TForm)
+    LabeledEdit1: TLabeledEdit;
+    ComboBox1: TComboBox;
+    Label1: TLabel;
+    BitBtn1: TBitBtn;
+    procedure FormShow(Sender: TObject);
+    procedure ComboBox1KeyPress(Sender: TObject; var Key: Char);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+    id_doc:string;
+  end;
+
+var
+  ChangeZPC: TChangeZPC;
+
+implementation
+
+uses unit1;
+
+{$R *.dfm}
+
+procedure TChangeZPC.ComboBox1KeyPress(Sender: TObject; var Key: Char);
+begin
+  key:=#0;
+end;
+
+procedure TChangeZPC.FormShow(Sender: TObject);
+begin
+  LabeledEdit1.Text:='0';
+  ComboBox1.ItemIndex:=0;
+end;
+
+end.

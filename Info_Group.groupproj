@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{EB17564F-B3F2-4A7F-A088-CF32F7842C13}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Info_XE.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Service\InfoServ.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Info_XE">
+        <MSBuild Projects="Info_XE.dproj"/>
+    </Target>
+    <Target Name="Info_XE:Clean">
+        <MSBuild Projects="Info_XE.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Info_XE:Make">
+        <MSBuild Projects="Info_XE.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="InfoServ">
+        <MSBuild Projects="Service\InfoServ.dproj"/>
+    </Target>
+    <Target Name="InfoServ:Clean">
+        <MSBuild Projects="Service\InfoServ.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="InfoServ:Make">
+        <MSBuild Projects="Service\InfoServ.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Info_XE;InfoServ"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Info_XE:Clean;InfoServ:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Info_XE:Make;InfoServ:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

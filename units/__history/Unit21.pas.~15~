@@ -1,0 +1,54 @@
+unit Unit21;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls, Vcl.Buttons;
+
+type
+  TZvMessage = class(TForm)
+    Label1: TLabel;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BitBtn1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    showed:boolean;
+    { Public declarations }
+  end;
+
+var
+  ZvMessage: TZvMessage;
+
+implementation
+
+{$R *.dfm}
+
+procedure TZvMessage.BitBtn1Click(Sender: TObject);
+begin
+  showed:=true;
+  Close();
+end;
+
+procedure TZvMessage.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  showed:=true;
+end;
+
+procedure TZvMessage.FormCreate(Sender: TObject);
+begin
+  showed:=false;
+end;
+
+procedure TZvMessage.FormShow(Sender: TObject);
+begin
+  AnimateWindow(Handle,500, SW_SHOWNOACTIVATE);
+end;
+
+end.

@@ -1,0 +1,90 @@
+object Block: TBlock
+  Left = 0
+  Top = 0
+  Align = alClient
+  AlphaBlend = True
+  AlphaBlendValue = 130
+  AutoSize = True
+  BorderStyle = bsNone
+  Caption = 'Block'
+  ClientHeight = 698
+  ClientWidth = 1043
+  Color = clBtnFace
+  TransparentColorValue = clBackground
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  WindowState = wsMaximized
+  OnCanResize = FormCanResize
+  OnClose = FormClose
+  OnHide = FormHide
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 17
+    Top = 31
+    Width = 7
+    Height = 2
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    ShowCaption = False
+    TabOrder = 0
+    object Label2: TLabel
+      Left = 20
+      Top = 383
+      Width = 857
+      Height = 93
+      Caption = '          '#1087#1086#1078#1072#1083#1091#1081#1089#1090#1072', '#1087#1086#1076#1086#1078#1076#1080#1090#1077
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -64
+      Font.Name = 'Times New Roman'
+      Font.Style = [fsBold]
+      GlowSize = 10
+      ParentFont = False
+    end
+    object Label1: TLabel
+      Left = 20
+      Top = 120
+      Width = 965
+      Height = 73
+      AutoSize = False
+      Caption = #1074#1099#1087#1086#1083#1085#1103#1077#1090#1089#1103' '#1086#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -64
+      Font.Name = 'Times New Roman'
+      Font.Style = [fsBold]
+      GlowSize = 10
+      ParentFont = False
+    end
+    object ProgressBar: TProgressBar
+      Left = 360
+      Top = 336
+      Width = 249
+      Height = 17
+      Align = alCustom
+      TabOrder = 0
+    end
+    object Indicator: TActivityIndicator
+      AlignWithMargins = True
+      Left = 456
+      Top = 248
+      Animate = True
+      FrameDelay = 80
+      IndicatorSize = aisXLarge
+      IndicatorType = aitSectorRing
+    end
+  end
+  object ActivityID: TActivityIndicator
+    Left = 473
+    Top = 296
+    ParentCustomHint = False
+    Animate = True
+    IndicatorSize = aisXLarge
+  end
+end

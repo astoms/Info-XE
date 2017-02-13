@@ -1,0 +1,35 @@
+unit Unit18;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls;
+
+type
+  TMileCard = class(TForm)
+    Src: TImage;
+    FIO: TLabel;
+    ball: TLabel;
+    Label1: TLabel;
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  MileCard: TMileCard;
+
+implementation
+
+{$R *.dfm}
+
+procedure TMileCard.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  Close;
+end;
+
+end.

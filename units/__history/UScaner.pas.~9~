@@ -1,0 +1,213 @@
+unit UScaner;
+
+interface
+
+uses
+ Windows;
+
+type
+ TComPort = class
+ private
+   hFile: THandle;
+ public
+   constructor Create;
+   destructor Destroy; override;
+   function InitCom(BaudRate, PortNo: Integer; Parity: Char;
+     CommTimeOuts: TCommTimeouts): Boolean;
+   procedure CloseCom;
+   function ReceiveCom(var Buffer; Size: DWORD): Integer;
+   function SendCom(var Buffer; Size: DWORD): Integer;
+   function ClearInputCom: Boolean;
+   procedure DataInBuffer(var InQueue, OutQueue: integer);
+ end;
+
+implementation
+
+uses
+ SysUtils;
+
+constructor TComPort.Create;
+begin
+ inherited;
+ CloseCom;
+end;
+
+destructor TComPort.Destroy;
+begin
+ CloseCom;
+ inherited;
+end;
+
+{BaudRate :  Скорость передачи
+рекомендуемые значения : 115200, 57600, 38400, 28800, 19200, 14400, 12800, 9600,
+                       4800, 2400, 1200, 600, 300, 110}
+{PortNo : номер порта}
+
+{Parity :
+EVENPARITY (2 по Windows.pas) дополнение до четности;
+MARKPARITY (3) бит четности всегда 1;
+NOPARITY (0) бит четности отсутствует ;
+ODDPARITY (1) дополнение до нечетности;
+SPACEPARITY (4) бит четности всегда 0.}
+
+{Поля структуры TCOMMTIMEOUTS имеют следующее назначение:
+ReadIntervalTimeout : DWORD
+максимальный временной промежуток (в мсек), допустимый между двумя принимаемыми байтами. Если интервал между двумя последовательными байтами превысит заданное значение, операция чтения ReadFile завершается с возвратом всех данных из приемного буфера. Нулевое значение данного поля означает, что данный тайм-аут не используется. Комбинация:
+ReadIntervalTimeout := MAXDWORD;
+ReadTotalTimeoutMultiplier := 0;
+ReadTotalTimeoutConstant := 0;
+приводит к тому, что функция ReadFile возвращает немедленно все имеющиеся байты в приемном буфере, даже если их там нет, или идет непрерывная передача на входе порта. Я всегда пользуюсь такими настройками в своем подходе.
+ReadTotalTimeoutMultiplier : DWORD
+задает множитель (в мсек), используемый для вычисления общего тайм-аута операции чтения. Для каждой операции чтения данное значение умножается на количество запрошенных для чтения байт.
+ReadTotalTimeoutConstant : DWORD
+задает константу (в мсек), используемую для вычисления общего тайм-аута операции чтения. Для каждой операции чтения данное значение плюсуется к результату умножения ReadTotalTimeoutMultiplier на количество запрошенных для чтения байт. Нулевое значение полей ReadTotalTimeoutMultiplier и ReadTotalTimeoutConstant означает, что общий тайм-аут для операции чтения не используется.
+WriteTotalTimeoutMultiplier : DWORD
+задает множитель (в мсек), используемый для вычисления общего тайм-аута операции записи. Для каждой операции записи данное значение умножается на количество записываемых байт.
+WriteTotalTimeoutConstant : DWORD
+задает константу (в мсек), используемую для вычисления общего тайм-аута операции записи. Для каждой операции записи данное значение прибавляется к результату умножения WriteTotalTimeoutMultiplier на количество записываемых байт. Нулевое значение полей WriteTotalTimeoutMultiplier и WriteTotalTimeoutConstant означает, что общий тайм-аут для операции записи не используется.
+}
+
+function TComPort.InitCom(BaudRate, PortNo: Integer; Parity: Char;
+ CommTimeOuts: TCommTimeouts): Boolean;
+var
+ FileName: string;
+ DCB: TDCB;
+ PortParam: string;
+begin
+ result := FALSE;
+ FileName := '\\.\COM' + IntToStr(PortNo); {имя файла}
+ {hFile := CreateFile (PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil,
+                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);    }
+
+  hFile := CreateFile(PChar(FileName),GENERIC_READ or GENERIC_WRITE,
+                      0,nil,OPEN_EXISTING,
+                      FILE_FLAG_OVERLAPPED,0);
+ if hFile = INVALID_HANDLE_VALUE then
+   exit;
+
+ //установка требуемых параметров
+ GetCommState(hFile, DCB); //чтение текущих параметров порта
+ PortParam := 'baud=' + IntToStr(BaudRate) + ' parity=n' +
+   ' data=8 stop=1 ' +
+   'octs=off';
+ if BuildCommDCB(PChar(PortParam), DCB) then
+ begin
+   result := SetCommState(hFile, DCB) and
+     SetCommTimeouts(hFile, CommTimeOuts);
+ end;
+ if not result then
+   CloseCom;
+end;
+
+procedure TComPort.CloseCom;
+begin
+ if hFile <> INVALID_HANDLE_VALUE then
+   CloseHandle(hFile);
+ hFile := INVALID_HANDLE_VALUE;
+end;
+
+// получаем данные из порта
+function TComPort.ReceiveCom(var Buffer; Size: DWORD): Integer;
+var
+ Received: DWORD;
+begin
+ if hFile = INVALID_HANDLE_VALUE then
+   raise Exception.Create('Не открыта запись в Com порт');
+ if ReadFile(hFile, Buffer, Size, Received, nil) then
+ begin
+   Result := Received;
+ end
+ else
+   raise Exception.Create('Ошибка приема данных: ' + IntToStr(GetLastError));
+end;
+
+// отправляем данные в порт
+function TComPort.SendCom(var Buffer; Size: DWORD): Integer;
+var
+ Sended: DWORD;
+begin
+ if hFile = INVALID_HANDLE_VALUE then
+   raise Exception.Create('Не открыта запись в Com порт');
+ if WriteFile(hFile, Buffer, Size, Sended, nil) then
+ begin
+   Result := Sended;
+ end
+ else
+   raise Exception.Create('Ошибка передачи данных: ' + IntToStr(GetLastError));
+end;
+
+// Очищаем приемный буфер порта
+function TComPort.ClearInputCom: Boolean;
+begin
+ if hFile = INVALID_HANDLE_VALUE then
+   raise Exception.Create('Не открыта запись в Com порт');
+ Result := PurgeComm(hFile, PURGE_RXCLEAR);
+end;
+
+procedure TComPort.DataInBuffer(var InQueue, OutQueue: integer);
+var
+ ComStat: TComStat;
+ e: cardinal;
+begin
+ if ClearCommError(hFile, e, @ComStat) then
+ begin
+   InQueue := ComStat.cbInQue;
+   OutQueue := ComStat.cbOutQue;
+ end
+ else
+ begin
+   InQueue := 0;
+   OutQueue := 0;
+ end;
+end;
+
+end.
+
+{ TComScanner
+
+constructor TComScanner.Create(Port: string);
+begin
+  // 1. Открываем файл
+  hPort := CreateFile(PChar('COM1'), GENERIC_READ + GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  // 2. Контроль ошибок
+  if hPort = INVALID_HANDLE_VALUE then
+  begin
+    exit;
+  end;
+  // 3. Чтение текущих настроек порта
+  try
+    GetCommState(hPort, DCB);
+  except
+  end;
+  // 4. Настройки:
+  // Скорость обмена
+  DCB.BaudRate := 9600;
+  // Число бит на символ
+  DCB.ByteSize := 8;
+  // Стоп-биты
+  DCB.StopBits := ONESTOPBIT;
+  // Четность
+  DCB.Parity   := NOPARITY;
+  DCB.Flags := 20625;
+  // 5. Передача настроек
+  try
+    SetCommState(hPort, DCB);
+  except
+  end;
+  // 6. Настройка буферов порта (очередей ввода и вывода)
+  try
+    SetupComm(hPort, 16, 16);
+  except
+  end;
+  // 7. Сброс буфферов и очередей
+  try
+    PurgeComm(hPort, PURGE_TXABORT or PURGE_RXABORT or PURGE_TXCLEAR or PURGE_RXCLEAR);
+  except
+  end;
+end;
+
+destructor TComScanner.Destroy;
+begin
+  CloseHandle(hPort);
+end;
+}

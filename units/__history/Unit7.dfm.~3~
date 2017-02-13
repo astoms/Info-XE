@@ -1,0 +1,17 @@
+inherited ChPrice4: TChPrice4
+  Caption = 'ChPrice4'
+  PixelsPerInch = 96
+  TextHeight = 19
+  inherited Panel1: TPanel
+    inherited LabeledEdit1: TLabeledEdit
+      EditLabel.ExplicitLeft = 0
+      EditLabel.ExplicitTop = -22
+      EditLabel.ExplicitWidth = 81
+    end
+    inherited LabeledEdit2: TLabeledEdit
+      EditLabel.ExplicitLeft = 0
+      EditLabel.ExplicitTop = -22
+      EditLabel.ExplicitWidth = 81
+    end
+  end
+end

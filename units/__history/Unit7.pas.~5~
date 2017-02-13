@@ -1,0 +1,83 @@
+unit Unit7;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls,
+  Vcl.Buttons, Vcl.ExtCtrls, Data.DB, Data.Win.ADODB;
+
+type
+  TChPlace = class(TForm)
+    Panel1: TPanel;
+    BitBtn1: TBitBtn;
+    LabeledEdit1: TLabeledEdit;
+    LabeledEdit2: TLabeledEdit;
+    BitBtn2: TBitBtn;
+    Panel2: TPanel;
+    DBGrid1: TDBGrid;
+    PlaceTable: TADOTable;
+    PlaceQuery: TADOQuery;
+    PlaceSource: TDataSource;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  ChPlace: TChPlace;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit1;
+
+procedure TChPlace.BitBtn1Click(Sender: TObject);
+var
+ temp:Word;
+begin
+  if ((LabeledEdit1.Text<>'') and (LabeledEdit2.Text<>'')) then
+  begin
+    temp:=MessageBox(handle, PChar('Вы действительно решили добавить новое место хранения с именем "'+LabeledEdit1.Text+'" и значением "'+LabeledEdit2.Text+'" в базу данных ?'), PChar('Добавление в "Места хранения":'), MB_YESNO+MB_ICONQUESTION);
+    case temp of
+      idyes:
+      begin
+        PlaceQuery.Active:=false;
+        PlaceQuery.SQL.Clear;
+        PlaceQuery.SQL.Add('insert into info_place(name,value) values('''+LabeledEdit1.Text+''','''+LabeledEdit2.Text+''')');
+        PlaceQuery.ExecSQL;
+        LabeledEdit1.Text:='';
+        LabeledEdit2.Text:='';
+        PlaceTable.Active:=false;
+        PlaceTable.Active:=true;
+      end;
+    end;
+  end;
+end;
+
+procedure TChPlace.BitBtn2Click(Sender: TObject);
+var
+ temp:Word;
+begin
+  temp:=MessageBox(handle, PChar('Вы действительно решили удалить место хранения "'+DBGrid1.DataSource.DataSet.FieldByName('name').AsString+'" из базы данных ?'), PChar('Удаление значения из "Места хранения":'), MB_YESNO+MB_ICONQUESTION);
+  case temp of
+    idyes:
+      begin
+        PlaceQuery.Active:=false;
+        PlaceQuery.SQL.Clear;
+        PlaceQuery.SQL.Add('delete from info_place where id='''+DBGrid1.DataSource.DataSet.FieldByName('id').AsString+'''');
+        PlaceQuery.ExecSQL;
+        PlaceTable.Active:=false;
+        PlaceTable.Active:=true;
+      end;
+  end;
+end;
+
+procedure TChPlace.FormShow(Sender: TObject);
+begin
+  PlaceTable.Active:=true;
+end;
+
+end.

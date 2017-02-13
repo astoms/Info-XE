@@ -1,0 +1,24 @@
+copy c:\INFO_XE\FR\ \\nv-info-1\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-2\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-4\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-5\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-6\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-7\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-8\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-9\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-10\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-11\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-12\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-13\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-14\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-15\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-16\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-17\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-18\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-19\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-20\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-info-21\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-electro\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-market-1\C$\INFO_XE\FR\
+copy c:\INFO_XE\FR\ \\nv-market-2\C$\INFO_XE\FR\
+pause

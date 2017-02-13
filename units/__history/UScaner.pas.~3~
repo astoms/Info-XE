@@ -1,0 +1,13 @@
+unit UScaner;
+
+interface
+
+type TComScanner = class
+  private
+  public
+    procedure Create();
+end;
+
+implementation
+
+end.

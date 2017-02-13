@@ -1,0 +1,27 @@
+object Block: TBlock
+  Left = 0
+  Top = 0
+  Align = alClient
+  AlphaBlend = True
+  AlphaBlendValue = 130
+  AutoSize = True
+  BorderStyle = bsNone
+  Caption = 'Block'
+  ClientHeight = 698
+  ClientWidth = 1043
+  Color = clBtnFace
+  TransparentColorValue = clBackground
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  WindowState = wsMaximized
+  OnCanResize = FormCanResize
+  OnClose = FormClose
+  OnHide = FormHide
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+end

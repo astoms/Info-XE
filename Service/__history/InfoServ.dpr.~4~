@@ -1,0 +1,114 @@
+program InfoServ;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+uses
+  System.SysUtils, ShellAPI, Tlhelp32, Windows;
+
+function KillTask(ExeFileName: string): integer;
+const
+ PROCESS_TERMINATE=$0001;
+var
+ ContinueLoop: BOOL;
+ FSnapshotHandle: THandle;
+ FProcessEntry32: TProcessEntry32;
+begin
+ result := 0;
+
+ FSnapshotHandle := CreateToolhelp32Snapshot
+                    (TH32CS_SNAPPROCESS, 0);
+ FProcessEntry32.dwSize := Sizeof(FProcessEntry32);
+ ContinueLoop := Process32First(FSnapshotHandle,
+                                FProcessEntry32);
+
+ while integer(ContinueLoop) <> 0 do
+ begin
+   if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
+        UpperCase(ExeFileName))
+    or (UpperCase(FProcessEntry32.szExeFile) =
+        UpperCase(ExeFileName))) then
+     Result := Integer(TerminateProcess(OpenProcess(
+                       PROCESS_TERMINATE, BOOL(0),
+                       FProcessEntry32.th32ProcessID), 0));
+   ContinueLoop := Process32Next(FSnapshotHandle,
+                                 FProcessEntry32);
+ end;
+
+ CloseHandle(FSnapshotHandle);
+end;
+
+Function CopyDir(SourceDir,TargetDir: String; StopIfNotAllCopied,
+OverWriteFiles: Boolean): Boolean;
+Var SR: TSearchRec;
+    I: Integer;
+Begin
+  Result:=False;
+  SourceDir:= IncludeTrailingBackslash(SourceDir);
+  TargetDir:= IncludeTrailingBackslash(TargetDir);
+  If Not DirectoryExists(SourceDir) Then
+  Exit;
+  If Not ForceDirectories(TargetDir) Then
+  Exit;
+  I:=FindFirst(SourceDir + '*', FaAnyFile, SR);
+  Try
+    While I = 0 Do
+    Begin
+      If (SR.Name <> '') And (SR.Name <> '.') And (SR.Name <> '..') Then
+      Begin
+        If SR.Attr = FaDirectory Then
+        Result:= CopyDir(SourceDir + SR.Name, TargetDir + SR.NAME,
+        StopIfNotAllCopied, OverWriteFiles)
+        Else
+        If Not (Not OverWriteFiles And FileExists(TargetDir + SR.Name)) Then
+        Result:= CopyFile(Pchar(SourceDir + SR.Name), Pchar(TargetDir + SR.Name),False)
+        Else
+        Result:=True;
+        If Not Result And StopIfNotAllCopied Then
+        Exit;
+      End;
+      I:=FindNext(SR);
+    End;
+  Finally
+    System.SysUtils.FindClose(SR);
+  End;
+End;
+
+
+begin
+  try
+    writeln('*********************************************');
+    writeln;
+  except
+  end;
+  try
+    writeln(' * Завершаем работу Info-справочник товаров');
+    KillTask('Info_XE.exe');
+  except
+  end;
+  try
+    writeln(' * Загружаем данные на компьютер');
+    if CopyDir('s:\IT-отдел\production\Info XE\*.*', GetCurrentDir, true, true) then
+    begin
+      writeln(' * Обновляем системные файлы');
+    end
+    else
+    begin
+      writeln;
+      writeln(' Ошибка обновления! Пожалуйста сообщите об этом системному администратору.');
+      readln;
+    end;
+  except
+  end;
+  try
+    writeln(' * Запускаем Info-справочник товаров');
+    WinExec('info_xe.exe', SW_SHOW);
+  except
+  end;
+  try
+    writeln;
+    writeln('*********************************************');
+  except
+  end;
+end.
