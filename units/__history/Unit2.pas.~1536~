@@ -2149,6 +2149,7 @@ end;
 procedure TMainForm.DBEdit1Change(Sender: TObject);
 var goods:string; i,k,e:integer; DataSetGood:string; temp:string;  List:TStringList;
 begin
+  {
   if TreeSet.FieldByName('article').AsString<>'' then
   begin
     try
@@ -2248,6 +2249,7 @@ begin
       GoodSet.CommandText:=GoodSet.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
       GoodSet.Active:=true;
       }
+  {
         GoodSet.Active:=false;
         //ShowMessage(Auth.storeloc2);
         DataSetGood:= ' SELECT *'
@@ -2279,16 +2281,19 @@ begin
     except
     end;
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1CellClick(Column: TColumn);
 begin
+  {
   try
     //DBGrid1.Refresh;
     //DBGrid1.Repaint;
   except
 
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1DblClick(Sender: TObject);
@@ -2302,6 +2307,7 @@ var amount, amount_d, amount_color, price_dr, price_dk: Currency;
     i:integer; ost_tov, ost_temp:string;
     SQL_TOV:string;
 begin
+  {
   try
     if PageControl1.ActivePageIndex=8 then
     begin
@@ -2786,11 +2792,13 @@ begin
     end;
   except
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
+  {
   try
     if key=VK_F12 then
     begin
@@ -2798,10 +2806,12 @@ begin
     end;
   except
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
+  {
   try
     if Key = ^A then
     begin
@@ -2810,6 +2820,7 @@ begin
     end;
   except
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -2817,6 +2828,7 @@ procedure TMainForm.DBGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
 var
   recTmp: TGridCoord;
 begin
+  {
   try
     if ((Shift = [ssLeft]) or (Shift = [ssRight]) or (Shift = [ssMiddle]) or (Shift = [ssCtrl]+[ssLeft]) or (Shift = [ssCtrl]+[ssRight]) or (Shift = [ssMiddle]+[ssCtrl])) then
     begin
@@ -2826,11 +2838,13 @@ begin
     end;
   except
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
+  {
   try
     if Button=mbLeft then
     begin
@@ -2853,12 +2867,20 @@ begin
     end;
   except
   end;
+  }
 end;
 
 procedure TMainForm.DBGrid1TitleClick(Column: TColumn);
 begin
   try
-    TreeSet.Sort:=Column.FieldName;
+    if (TreeSet.Sort = Column.FieldName + ' ASC') then
+    begin
+      TreeSet.Sort:=Column.FieldName + ' DESC';
+    end
+    else
+    begin
+      TreeSet.Sort:=Column.FieldName + ' ASC';
+    end;
   except
   end;
 end;
@@ -5281,29 +5303,30 @@ begin
     end
     else
     begin
-      DBGrid1.DataSource.DataSet.Active:=false;
-      Application.ProcessMessages;
-      Screen.Cursor := crAppStart;
-      if ToggleAct.State=TToggleSwitchState.tssOff then
-      begin
+      try
+        Screen.Cursor := crAppStart;
+        if ToggleAct.State=TToggleSwitchState.tssOff then
+        begin
 
-        TreeSet.Active:=false;
-        TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-        TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and s.tree LIKE '''+tmp+'%'' and accepted=1';
-        TreeSet.Active:=true;
+          TreeSet.Active:=false;
+          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and s.tree LIKE '''+tmp+'%'' and accepted=1';
+          TreeSet.Active:=true;
 
-      end
-      else
-      begin
+        end
+        else
+        begin
 
-        TreeSet.Active:=false;
-        TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-        TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and s.tree LIKE '''+tmp+'%''';
-        TreeSet.Active:=true;
+          TreeSet.Active:=false;
+          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and s.tree LIKE '''+tmp+'%''';
+          TreeSet.Active:=true;
 
+        end;
+        Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+        Screen.Cursor := crDefault;
+      except
       end;
-      Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
-      Screen.Cursor := crDefault;
     end;
     if (TreeSet.RecordCount > 0) then DBGrid1.Enabled:=true;
   except

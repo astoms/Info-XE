@@ -2798,7 +2798,6 @@ end;
 procedure TMainForm.DBGrid1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  {
   try
     if key=VK_F12 then
     begin
@@ -2806,12 +2805,10 @@ begin
     end;
   except
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
-  {
   try
     if Key = ^A then
     begin
@@ -2820,7 +2817,6 @@ begin
     end;
   except
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -2828,7 +2824,6 @@ procedure TMainForm.DBGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
 var
   recTmp: TGridCoord;
 begin
-  {
   try
     if ((Shift = [ssLeft]) or (Shift = [ssRight]) or (Shift = [ssMiddle]) or (Shift = [ssCtrl]+[ssLeft]) or (Shift = [ssCtrl]+[ssRight]) or (Shift = [ssMiddle]+[ssCtrl])) then
     begin
@@ -2838,13 +2833,11 @@ begin
     end;
   except
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  {
   try
     if Button=mbLeft then
     begin
@@ -2867,7 +2860,6 @@ begin
     end;
   except
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1TitleClick(Column: TColumn);
