@@ -1689,6 +1689,13 @@ begin
   OpenD.Filter:='Excel 2007-2017|*.xlsx|Excel 2003|*.xls';
   if OpenD.Execute then
   begin
+    Excel:=CreateOleObject('Excel.Application');
+    Excel.Application.WorkBooks.Add(OpenD.FileName);
+    Excel.Visible:=False;
+    Excel.DisplayAlerts:=False;
+    i:=14;
+    while (Excel.Cells[i,1].Text<>'') or (Excel.Cells[i,2].Text<>'') or (Excel.Cells[i,3].Text<>'')  do
+    {
     Screen.Cursor := crAppStart;
     Excel:=CreateOleObject('Excel.Application');
     Excel.Application.WorkBooks.Add(OpenD.FileName);
@@ -1776,6 +1783,7 @@ begin
     CheckTable.Filtered:=true;
     FlashWindow(Application.Handle, True);
     Screen.Cursor := crDefault;
+    }
     Excel.Quit;
     Excel:=Unassigned;
   end
@@ -2149,7 +2157,6 @@ end;
 procedure TMainForm.DBEdit1Change(Sender: TObject);
 var goods:string; i,k,e:integer; DataSetGood:string; temp:string;  List:TStringList;
 begin
-  {
   if TreeSet.FieldByName('article').AsString<>'' then
   begin
     try
@@ -2209,7 +2216,6 @@ begin
     except
       //on E:Exception do ShowMessage('Ошибка 0cv2324x354342: '+E.Message);
     end;
-
     try
       OraPos.Active:=false;
       OraPos.SQL.Clear;
@@ -2237,8 +2243,11 @@ begin
     except
     end;
 
+
+
+
     try
-      {
+
       GoodSet.Active:=false;
       GoodSet.CommandText:='select g.article, ';
       GoodSet.CommandText:=GoodSet.CommandText+'decode(g.storeloc, ''2'', ''Маг. "Новоселкин", Минский р-н, пос. Боровая,1, 223053'', ''8'', ''Маг. "Mile", г.Минск, Долгиновский тракт,188, 220053'', ''11'', ''Маг. "Mile", г.Брест, ул. Карьерная, 9Б, 224022'',';
@@ -2248,8 +2257,7 @@ begin
       GoodSet.CommandText:=GoodSet.CommandText+' , g.quantity, g.RESERVEDQUANTITY, g.INCOMINGQUANTITY, g.AWAITEDQUANTITY, g.FOUNDQUANTITY, sog.opersale from smgoods g, ';
       GoodSet.CommandText:=GoodSet.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
       GoodSet.Active:=true;
-      }
-  {
+
         GoodSet.Active:=false;
         //ShowMessage(Auth.storeloc2);
         DataSetGood:= ' SELECT *'
@@ -2280,8 +2288,8 @@ begin
       PropSet.Active:=true;
     except
     end;
+
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1CellClick(Column: TColumn);
@@ -2307,7 +2315,6 @@ var amount, amount_d, amount_color, price_dr, price_dk: Currency;
     i:integer; ost_tov, ost_temp:string;
     SQL_TOV:string;
 begin
-  {
   try
     if PageControl1.ActivePageIndex=8 then
     begin
@@ -2792,7 +2799,6 @@ begin
     end;
   except
   end;
-  }
 end;
 
 procedure TMainForm.DBGrid1KeyDown(Sender: TObject; var Key: Word;
@@ -5407,7 +5413,6 @@ procedure TMainForm.TreeViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Node:TTreeNode;
 begin
-  {
   Node:=TreeView.GetNodeAt(X,Y);
   if Node<>nil then
   begin
@@ -5416,16 +5421,15 @@ begin
       TreeView.BeginDrag(true, 0);
     end;
   end;
-  }
 end;
 
 procedure TMainForm.TreeViewMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  {if Shift = [ssLeft] then
+  if Shift = [ssLeft] then
   begin
     TreeView.EndDrag(true);
-  end;}
+  end;
 end;
 
 procedure TMainForm.WB_LoadHTML(WebBrowser: TWebBrowser; HTMLCode: string);
