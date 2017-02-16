@@ -33,7 +33,8 @@ uses
   Unit10 in 'units\Unit10.pas' {AddZPC},
   Unit19 in 'units\Unit19.pas' {ChangeZPC},
   Unit20 in 'units\Unit20.pas' {AddPlace},
-  Unit21 in 'units\Unit21.pas' {ZvMessage};
+  Unit21 in 'units\Unit21.pas' {ZvMessage},
+  Unit22 in 'units\Unit22.pas' {PrintForm};
 
 {$R *.res}
 
@@ -65,6 +66,7 @@ begin
   Application.CreateForm(TChangeZPC, ChangeZPC);
   Application.CreateForm(TAddPlace, AddPlace);
   Application.CreateForm(TZvMessage, ZvMessage);
+  Application.CreateForm(TPrintForm, PrintForm);
   MileShow.TransparentColorValue:=MileShow.Color;
   //Application.OnMinimize:=Auth.Restore;
   Application.OnRestore:=Auth.Restore;
