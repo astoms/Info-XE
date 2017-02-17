@@ -513,6 +513,7 @@ type
     TvExt:boolean;
     procedure HideMes();
     procedure ChSearch();
+    function DelPers(value:string):string;
     function GridSelectAll(Grid: TDBGrid): Longint;
     procedure WB_LoadHTML(WebBrowser: TWebBrowser; HTMLCode: string);
     procedure LoadReg();
@@ -1683,7 +1684,7 @@ end;
 procedure TMainForm.BitBtn7Click(Sender: TObject);
 var OpenD:TOpenDialog; Excel:Variant; i,j,k:integer; article:AnsiString; action_price, action_def:string;
     action_def_r, action_def_k:string; FormatList: TStringList; CatCheck:TStringList;
-    mj, mk:boolean; name:string;
+    mj, mk:boolean; name:string; price_dr, price_dk: string;
 begin
   OpenD:=TOpenDialog.Create(nil);
   OpenD.Title:='Загрузка Excel файла:';
@@ -1755,7 +1756,7 @@ begin
     begin
       j:=0;
       mj:=false;
-      while j<PrintForm.Cat.Count do
+      while j<PrintForm.Cat.Items.Count do
       begin
         if PrintForm.Cat.Checked[j] then
         begin
@@ -1771,7 +1772,7 @@ begin
       if (mj) then
       begin
         k:=0;
-        while k<PrintForm.Format.Count do
+        while k<PrintForm.Format.Items.Count do
         begin
           if PrintForm.Format.Checked[k] then
           begin
@@ -1795,40 +1796,125 @@ begin
           action_def_r:='';
           action_def_k:='';
           //
-          article:='article = '+#39+Excel.Cells[i,14].Text+#39;
-          name:=Excel.Cells[i,15].Text;
-          action_price:=Excel.Cells[i,21].Text;
-          action_def:=Excel.Cells[i,17].Text;
-          action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
-          action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
-          if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+
           try
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+article;
-            TreeSet.Active:=true;
+            StrToFloat(Excel.Cells[i,14].Text);
+            article:='article = '+#39+Excel.Cells[i,14].Text+#39;
+            name:=Excel.Cells[i,15].Text;
+            action_price:=DelPers(Excel.Cells[i,21].Text);
+            action_def:=Excel.Cells[i,17].Text;
+            try
+              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+            except
+            end;
+            try
+              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+            if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+            try
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+article;
+              TreeSet.Active:=true;
+            except
+              //on E:Exception do ShowMessage(E.Message);
+            end;
+            try
+              BarcodeSet.Active:=false;
+              BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Excel.Cells[i,14].Text+'''';
+              BarcodeSet.Active:=true;
+            except
+            end;
+            DBGrid1.Enabled:=true;
+            DBGrid1.OnDblClick(nil);
+            try
+              CheckQuery.Active:=false;
+              CheckQuery.SQL.Clear;
+              CheckQuery.SQL.Add('select price_dr, price_dk from `info_check` where article='''+Excel.Cells[i,14].Text+'''');
+              CheckQuery.Active:=true;
+              price_dr:=CheckQuery.FieldByName('price_dr').AsString;
+              price_dk:=CheckQuery.FieldByName('price_dk').AsString;
+            except
+            end;
+            try
+              CheckQuery.Active:=false;
+              CheckQuery.SQL.Clear;
+              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''' where article='''+Excel.Cells[i,14].Text+'''');
+              CheckQuery.ExecSQL;
+            except
+            end;
           except
-            //on E:Exception do ShowMessage(E.Message);
-          end;
-          try
-            BarcodeSet.Active:=false;
-            BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Excel.Cells[i,14].Text+'''';
-            BarcodeSet.Active:=true;
-          except
-          end;
-          try
-            CheckQuery.Active:=false;
-            CheckQuery.SQL.Clear;
-            CheckQuery.SQL.Add('insert into `info_check`(groupid, article, barcode, name, price, price_d, em, country, memo, magazin, action_price_r, action_def_r, action_def_k) values()');
-            CheckQuery.ExecSQL;
-          except
+
           end;
         end
         else
         begin
+          article:='';
+          name:='';
+          action_price:='';
+          action_def:='';
+          action_def_r:='';
+          action_def_k:='';
+          //
 
+          try
+            StrToFloat(Excel.Cells[i,14].Text);
+            article:='article = '+#39+Excel.Cells[i,14].Text+#39;
+            name:=Excel.Cells[i,15].Text;
+            action_price:=DelPers(Excel.Cells[i,21].Text);
+            action_def:=Excel.Cells[i,17].Text;
+            try
+              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+            except
+            end;
+            try
+              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+            action_def:=Excel.Cells[i,18].Text;
+            try
+              price_dr:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+            except
+            end;
+            try
+              price_dk:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+            if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+            try
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+article;
+              TreeSet.Active:=true;
+            except
+              //on E:Exception do ShowMessage(E.Message);
+            end;
+            try
+              BarcodeSet.Active:=false;
+              BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Excel.Cells[i,14].Text+'''';
+              BarcodeSet.Active:=true;
+            except
+            end;
+            DBGrid1.Enabled:=true;
+            DBGrid1.OnDblClick(nil);
+            try
+              CheckQuery.Active:=false;
+              CheckQuery.SQL.Clear;
+              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''' where article='''+Excel.Cells[i,14].Text+'''');
+              CheckQuery.ExecSQL;
+            except
+            end;
+          except
+
+          end;
         end;
       end;
+      CheckTable.Active:=false;
+      CheckTable.Active:=true;
+      CheckTable.Filtered:=false;
+      CheckTable.Filter:='groupid='''+Auth.groupid+'''';
+      CheckTable.Filtered:=true;
       inc(i);
     end;
     {
@@ -1920,11 +2006,6 @@ begin
     FlashWindow(Application.Handle, True);
     Screen.Cursor := crDefault;
     }
-    CheckTable.Active:=false;
-    CheckTable.Active:=true;
-    CheckTable.Filtered:=false;
-    CheckTable.Filter:='groupid='''+Auth.groupid+'''';
-    CheckTable.Filtered:=true;
     FlashWindow(Application.Handle, True);
     Screen.Cursor := crDefault;
     Excel.Quit;
@@ -3468,6 +3549,22 @@ begin
     ZPC_TABLE.Sort:=Column.FieldName;
   except
   end;
+end;
+
+function TMainForm.DelPers(value: string): string;
+var i:integer; temp:string;
+begin
+  temp:='';
+  i:=1;
+  while i<=length(value) do
+  begin
+    if copy(value, i, 1)<>'%' then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  result:=temp;
 end;
 
 procedure TMainForm.DTChange(Sender: TObject);

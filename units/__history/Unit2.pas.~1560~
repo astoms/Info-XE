@@ -1681,8 +1681,9 @@ begin
 end;
 
 procedure TMainForm.BitBtn7Click(Sender: TObject);
-var OpenD:TOpenDialog; Excel:Variant; i:integer; article:AnsiString; action_price, action_def:string;
-    action_price_r, action_price_k, action_def_r, action_def_k:string; FormatList: TStringList; CatCheck:TStringList;
+var OpenD:TOpenDialog; Excel:Variant; i,j,k:integer; article:AnsiString; action_price, action_def:string;
+    action_def_r, action_def_k:string; FormatList: TStringList; CatCheck:TStringList;
+    mj, mk:boolean; name:string; price_dr, price_dk: string;
 begin
   OpenD:=TOpenDialog.Create(nil);
   OpenD.Title:='Загрузка Excel файла:';
@@ -1726,13 +1727,121 @@ begin
       begin
         FormatList.Add('А6');
       end;
-      if ((Excel.Cells[i,1].Text<>'') and (Excel.Cells[i,1].Text<>'Итого:')) then
+      if ((Excel.Cells[i,1].Text<>'') and (Excel.Cells[i,1].Text<>'Итого:') and (Excel.Cells[i,1].Text<>'итого:')) then
       begin
         CatCheck.Add(Excel.Cells[i,1].Text);
       end;
       inc(i);
     end;
+    PrintForm.DTP.Date:=Now();
+    PrintForm.Format.Items.Clear;
+    i:=0;
+    while i<FormatList.Count do
+    begin
+      PrintForm.Format.Items.Add(FormatList.Strings[i]);
+      inc(i);
+    end;
+    PrintForm.Cat.Items.Clear;
+    i:=0;
+    while i<CatCheck.Count do
+    begin
+      PrintForm.Cat.Items.Add(CatCheck.Strings[i]);
+      inc(i);
+    end;
     PrintForm.ShowModal;
+    Screen.Cursor := crAppStart;
+    i:=14;
+    while ((Excel.Cells[i,14].Text<>'') or (Excel.Cells[i,15].Text<>'') or (Excel.Cells[i,16].Text<>'') or (Excel.Cells[i,1].Text<>''))  do
+    begin
+      j:=0;
+      mj:=false;
+      while j<PrintForm.Cat.Count do
+      begin
+        if PrintForm.Cat.Checked[j] then
+        begin
+          if Pos(PrintForm.Cat.Items.Strings[j], Excel.Cells[i,1].Text)>0 then
+          begin
+            mj:=true;
+            break;
+          end;
+        end;
+        inc(j);
+      end;
+      mk:=false;
+      if (mj) then
+      begin
+        k:=0;
+        while k<PrintForm.Format.Count do
+        begin
+          if PrintForm.Format.Checked[k] then
+          begin
+            if Pos(PrintForm.Format.Items.Strings[k], Excel.Cells[i,11].Text)>0 then
+            begin
+              mk:=true;
+              break;
+            end;
+          end;
+          inc(k);
+        end;
+      end;
+      if (mk) then
+      begin
+        if (PrintForm.Action.Checked) then
+        begin
+          article:='';
+          name:='';
+          action_price:='';
+          action_def:='';
+          action_def_r:='';
+          action_def_k:='';
+          //
+          article:='article = '+#39+Excel.Cells[i,14].Text+#39;
+          name:=Excel.Cells[i,15].Text;
+          action_price:=Excel.Cells[i,21].Text;
+          action_def:=Excel.Cells[i,17].Text;
+          action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+          action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+          if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+          try
+            TreeSet.Active:=false;
+            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+article;
+            TreeSet.Active:=true;
+          except
+            //on E:Exception do ShowMessage(E.Message);
+          end;
+          try
+            BarcodeSet.Active:=false;
+            BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Excel.Cells[i,14].Text+'''';
+            BarcodeSet.Active:=true;
+          except
+          end;
+          DBGrid1.Enabled:=true;
+          DBGrid1.OnDblClick(nil);
+          try
+            CheckQuery.Active:=false;
+            CheckQuery.SQL.Clear;
+            CheckQuery.SQL.Add('select price_dr, price_dk from `info_check` where article='''+article+'''');
+            CheckQuery.Active:=true;
+            price_dr:=CheckQuery.FieldByName('price_dr').AsString;
+            price_dk:=CheckQuery.FieldByName('price_dk').AsString;
+          except
+          end;
+          try
+            CheckQuery.Active:=false;
+            CheckQuery.SQL.Clear;
+            CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''' action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''' where article='''+article+'''');
+            CheckQuery.ExecSQL;
+          except
+          end;
+        end
+        else
+        begin
+
+        end;
+      end;
+      inc(i);
+    end;
     {
     Screen.Cursor := crAppStart;
     Excel:=CreateOleObject('Excel.Application');
@@ -1822,6 +1931,13 @@ begin
     FlashWindow(Application.Handle, True);
     Screen.Cursor := crDefault;
     }
+    CheckTable.Active:=false;
+    CheckTable.Active:=true;
+    CheckTable.Filtered:=false;
+    CheckTable.Filter:='groupid='''+Auth.groupid+'''';
+    CheckTable.Filtered:=true;
+    FlashWindow(Application.Handle, True);
+    Screen.Cursor := crDefault;
     Excel.Quit;
     Excel:=Unassigned;
   end
