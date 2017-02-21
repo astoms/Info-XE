@@ -513,6 +513,8 @@ type
     TvExt:boolean;
     procedure HideMes();
     procedure ChSearch();
+    function ClearField(value:string):string;
+    function ClearSQL(value:string):string;
     function DelPers(value:string):string;
     function GridSelectAll(Grid: TDBGrid): Longint;
     procedure WB_LoadHTML(WebBrowser: TWebBrowser; HTMLCode: string);
@@ -1800,7 +1802,7 @@ begin
           try
             StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
-            name:=Excel.Cells[i,15].Text;
+            name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
@@ -1861,7 +1863,7 @@ begin
           try
             StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
-            name:=Excel.Cells[i,15].Text;
+            name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
@@ -2183,6 +2185,38 @@ begin
     ZV_READ.First;
   except
   end;
+end;
+
+function TMainForm.ClearField(value: string): string;
+var i:integer; temp:string;
+begin
+  temp:='';
+  i:=1;
+  while i<=length(value) do
+  begin
+    if ((copy(value, i, 1)<>' ') and (copy(value, i, 1)<>'З') and (copy(value, i, 1)<>'П') and (copy(value, i, 1)<>'Ц'))  then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  result:=temp;
+end;
+
+function TMainForm.ClearSQL(value: string): string;
+var i:integer; temp:string;
+begin
+  temp:='';
+  i:=1;
+  while i<=length(value) do
+  begin
+    if ((copy(value, i, 1)<>''''))  then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  result:=temp;
 end;
 
 procedure TMainForm.ClientError(Sender: TObject; Socket: TCustomWinSocket;
@@ -4530,102 +4564,6 @@ procedure TMainForm.SearchClick(Sender: TObject);
 var i,k,e, count:integer; tmp,temp:array of string; filtered:string;
     getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string;
 begin
-  if checkbox4.Checked=true then
-  begin
-    if FindEdit.Text<>'' then
-    begin
-      if length(FindEdit.Text)=12 then
-      begin
-        FindEdit.Text:=copy(FindEdit.Text, 5, 7);
-      end;
-      try
-        OraZPC.Active:=false;
-        OraZPC.SQL.Clear;
-        OraZPC.SQL.Add('select s.article, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
-        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity from smgoods g where g.storeloc=''19'' group by g.article) gs, smstoreunits sb ');
-        OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
-        OraZPC.SQL.Add('and d.id = a.id ');
-        OraZPC.SQL.Add('and c.id = a.ourselfclient ');
-        OraZPC.SQL.Add('and d.location = l.id ');
-        OraZPC.SQL.Add('and s.docid = d.id ');
-        OraZPC.SQL.Add('and ds.article = s.article ');
-        OraZPC.SQL.Add('and sb.article = s.article ');
-        OraZPC.SQL.Add('and gs.article = s.article ');
-        OraZPC.SQL.Add('group by s.article ');
-        OraZPC.Active:=true;
-        try
-          ZPC_Query.Active:=false;
-          ZPC_Query.SQL.Clear;
-          ZPC_Query.SQL.Add('delete from zpc');
-          ZPC_Query.ExecSQL;
-        except
-          //On E:Exception do ShowMessage('Ошибка: '+E.Message);
-        end;
-        if OraZPC.RecordCount>0 then
-        begin
-          while not OraZPC.Eof do
-          begin
-            try
-              zpc_place:='';
-              Place_Query2.Active:=false;
-              Place_Query2.SQL.Clear;
-              Place_Query2.SQL.Add('select clPlace from tblNaserver where clArticle='''+OraZPC.FieldByName('article').AsString+'''');
-              Place_Query2.Active:=true;
-              while not Place_Query2.Eof do
-              begin
-                zpc_place:=zpc_place+Place_Query2.FieldByName('clPlace').AsString+';';
-                Place_Query2.Next;
-              end;
-              zpc_place:=copy(zpc_place, 1, length(zpc_place)-1);
-            except
-              //On E:Exception do ShowMessage('Ошибка: '+E.Message);
-            end;
-            try
-              ZPC_Query.Active:=false;
-              ZPC_Query.SQL.Clear;
-              ZPC_Query.SQL.Add('insert into zpc(zpc_num, barcode, sender, getter, article, name, quan, edism, ost, clPlace) values('''+OraZPC.FieldByName('zpc').AsString+''', '''+OraZPC.FieldByName('barcode').AsString+''', '''+OraZPC.FieldByName('sender').AsString+''', '''+OraZPC.FieldByName('getter').AsString+''', '''+OraZPC.FieldByName('article').AsString+''', '''+OraZPC.FieldByName('name').AsString+''', '''+OraZPC.FieldByName('quan').AsString+''', '''+OraZPC.FieldByName('edism').AsString+''', '''+OraZPC.FieldByName('ost').AsString+''', '''+zpc_place+''')');
-              ZPC_Query.ExecSQL;
-            except
-              //On E:Exception do ShowMessage('Ошибка: '+E.Message);
-            end;
-            OraZPC.Next;
-          end;
-          try
-            ZPC_Query.Active:=false;
-            ZPC_Query.SQL.Clear;
-            ZPC_Query.SQL.Add('select * from zpc order by name');
-            ZPC_Query.Active:=true;
-          except
-            //On E:Exception do ShowMessage('Ошибка: '+E.Message);
-          end;
-        end;
-        FindEdit.SetFocus;
-        FindEdit.SelLength:=0;
-        FindEdit.SelStart:=Length(FindEdit.Text);
-      except
-        //ShowMessage('Запрос выполнился с ошибкой. Попробуйте изменить запрос!');
-        Exit;
-      end;
-      try
-        dir:=ExtractFilePath(ParamStr(0));
-        ZPCReport.LoadFromFile(dir+'FR\ZPC.fr3');
-        ZPCReport.PrintOptions.ShowDialog:=true;
-        ZPCReport.PrepareReport(true);
-        ZPCReport.ShowPreparedReport;
-        ZPCReport.Clear;
-      except
-        ShowMessage('Вывод отчета завершен с ошибкой.');
-        FindEdit.SetFocus;
-        FindEdit.SelLength:=0;
-        FindEdit.SelStart:=Length(FindEdit.Text);
-        Exit;
-      end;
-    end;
-    FindEdit.SetFocus;
-    FindEdit.SelLength:=0;
-    FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-  end;
   if checkbox3.Checked=true then
   begin
     if FindEdit.Text<>'' then
@@ -4656,306 +4594,579 @@ begin
     FindEdit.SelStart:=Length(FindEdit.Text);
     Exit;
   end;
-  if f12=true then
+  if ((checkbox1.Checked=true) or (checkbox2.Checked=true)) then
   begin
-    Scaner.Caption:='Price Checker: ';
-    Scaner.Find(FindEdit.Text);
-    Application.ProcessMessages;
-    Scaner.Show;
-    Scaner.Finder.SetFocus;
-    f12:=false;
-    //FindEdit.Text:='';
-    //FindEdit.SetFocus;
-    //FindEdit.SelLength:=0;
-    //FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-    {
-    else
+    if f12=true then
     begin
-      FindEdit.Text:=FindEdit.Text+' ';
+      Scaner.Caption:='Price Checker: ';
+      Scaner.Find(FindEdit.Text);
+      Application.ProcessMessages;
+      Scaner.Show;
+      Scaner.Finder.SetFocus;
+      f12:=false;
+      //FindEdit.Text:='';
+      //FindEdit.SetFocus;
+      //FindEdit.SelLength:=0;
+      //FindEdit.SelStart:=Length(FindEdit.Text);
+      Exit;
+      {
+      else
+      begin
+        FindEdit.Text:=FindEdit.Text+' ';
+        FindEdit.SelStart:=Length(FindEdit.Text);
+        Exit;
+      end;
+      }
+    end;
+    if f12_ext=true then
+    begin
       FindEdit.SelStart:=Length(FindEdit.Text);
       Exit;
     end;
-    }
-  end;
-  if f12_ext=true then
-  begin
-    FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-  end;
-  if FindEdit.Text='' then
-  begin
-    FindEdit.SetFocus;
-    FindEdit.SelLength:=0;
-    FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-  end
-  else
-  begin
-    filtered:=FindEdit.Text;
-    for i := length(filtered) downto 2 do
+    if FindEdit.Text='' then
     begin
-      if (filtered[i]=' ') and (filtered[i-1]=' ') then
-        delete(filtered,i,1);
-    end;
-    if filtered[length(filtered)]<>#32 then filtered:=filtered+#32;
-  end;
-  FindEdit.Text:=filtered;
-  if Search.Caption='[ Фильтр ]' then
-  begin
-    if (group='') then SNode:=TreeView.Items[0];
-    TreeView.OnChange(self, SNode);
-    TreeView.SetFocus;
-    FindEdit.SetFocus;
-    FindEdit.SelLength:=0;
-    FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-  end;
-
-  i:=1;
-  k:=0;
-  while i<>length(FindEdit.Text)+1 do
-  begin
-    if copy(FindEdit.Text, i, 1)=' ' then
-    begin
-      inc(k);
-    end;
-    inc(i);
-  end;
-  SetLength(tmp, k);
-
-  i:=1;
-  k:=0;
-  while i<>length(FindEdit.Text)+1 do
-  begin
-    if copy(FindEdit.Text, i ,1)<>#32 then
-    begin
-      tmp[k]:=tmp[k]+copy(FindEdit.Text, i, 1);
+      FindEdit.SetFocus;
+      FindEdit.SelLength:=0;
+      FindEdit.SelStart:=Length(FindEdit.Text);
+      Exit;
     end
-    else inc(k);
-    inc(i);
-  end;
-
-  k:=0;
-  e:=0;
-  while k<>length(tmp) do
-  begin
-    if tmp[k]<>'' then
+    else
     begin
-      inc(e);
+      filtered:=FindEdit.Text;
+      for i := length(filtered) downto 2 do
+      begin
+        if (filtered[i]=' ') and (filtered[i-1]=' ') then
+          delete(filtered,i,1);
+      end;
+      if filtered[length(filtered)]<>#32 then filtered:=filtered+#32;
     end;
-    inc(k);
-  end;
-
-  if RadioButton5.Checked=true then
-  begin
-    try
-      TreeSet.Active:=false;
-      TreeSet.CommandText:='select DISTINCT d.article, c.name, c.mesabbrev as mesname, c.country, DECODE(c.accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'DECODE(c.datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'from smspec d, smdocuments p, supermag.smclientinfo u, smcard c, sacardclass s ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'where p.id = d.docid(+) ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'and u.id = p.clientindex ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'and d.article = c.article ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'and s.id = c.idclass ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'and d.doctype = ''WI'' ';
-      TreeSet.CommandText:=TreeSet.CommandText + 'and upper(u.name) like upper(''%'+copy(FindEdit.Text, 1, length(FindEdit.Text)-1)+'%'') ';
-      TreeSet.Active:=true;
-      DBGrid1.Enabled:=true;
-    except
-      //on E:Exception do ShowMessage(E.Message);
-    end;
-    Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
-    //Exit;
-  end;
-
-  if RadioButton4.Checked=true then
-  begin
-    try
-      if (Access.Connected = false) then Access.Connected:=true;
-    except
+    FindEdit.Text:=filtered;
+    if Search.Caption='[ Фильтр ]' then
+    begin
+      if (group='') then SNode:=TreeView.Items[0];
+      TreeView.OnChange(self, SNode);
+      TreeView.SetFocus;
       FindEdit.SetFocus;
       FindEdit.SelLength:=0;
       FindEdit.SelStart:=Length(FindEdit.Text);
       Exit;
     end;
-    try
-      if (FindEdit.Text='') then exit;
 
-      filtered:='';
-      i:=0;
-      while i<>length(tmp) do
-      begin
-        filtered:=filtered+'clPlace like '+#39+'%'+tmp[i]+'%'+#39+' or ';
-        inc(i);
-      end;
-      filtered:=copy(filtered, 1, length(filtered)-3);
-    except
-    end;
-
-    if filtered<>'' then
+    i:=1;
+    k:=0;
+    while i<>length(FindEdit.Text)+1 do
     begin
-      try
-        Place_Query.Active:=false;
-        Place_Query.SQL.Clear;
-        Place_Query.SQL.Add('select clStrihkod from tblNaserver where '+filtered);
-        //ShowMessage(Place_Query.SQL.CommaText);
-        Place_Query.Active:=true;
-      except
+      if copy(FindEdit.Text, i, 1)=' ' then
+      begin
+        inc(k);
       end;
-      tmpf:='';
-      try
-        if Place_Query.RecordCount>0 then
-        begin
-          try
-            Place_Query.First;
-            while not Place_Query.Eof do
-            begin
-              tmpf:=tmpf+#39+Place_Query.FieldByName('clStrihkod').AsString+#39+', ';
-              Place_Query.Next;
-            end;
-            tmpf:=copy(tmpf, 1, length(tmpf)-2);
-          except
-          end;
-          try
-            MainForm.TreeView.OnChange(nil,MainForm.TreeView.Items.GetFirstNode);
-            try
-              BarcodeSet.Active:=false;
-              BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode in ('+tmpf+')';
-              BarcodeSet.Active:=true;
-            except
-              //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
-            end;
-            filtered:='';
-            BarcodeSet.First;
-            while not BarcodeSet.Eof do
-            begin
-              filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
-              BarcodeSet.Next;
-            end;
-            try
-              filtered:=copy(filtered, 1, length(filtered)-2);
-            except
-            end;
-            //ShowMessage(filtered);
-            if filtered='' then
-            begin
-              //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-              FindEdit.SetFocus;
-              FindEdit.SelLength:=0;
-              FindEdit.SelStart:=Length(FindEdit.Text);
-              Exit;
-            end;
-            try
-              TreeSet.Active:=false;
-              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
-              //ShowMessage('#1: '+TreeSet.CommandText);
-              TreeSet.Active:=true;
-            except
-            end;
-            Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
-            if TreeSet.RecordCount=0 then
-            begin
-              DBGrid1.Enabled:=false;
-              //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-            end
-            else
-            begin
-              DBGrid1.Enabled:=true;
-            end;
-            //Filter.Caption:='[Фильтр]';
-            Search.Caption:='[ Фильтр ]';
-          except
-          end;
-        end;
-      except
-      end;
+      inc(i);
     end;
-  end;
+    SetLength(tmp, k);
 
-  //по артиклу
-  if RadioButton1.Checked=true then
-  begin
-    count:=e;
-    SetLength(temp, e);
+    i:=1;
+    k:=0;
+    while i<>length(FindEdit.Text)+1 do
+    begin
+      if copy(FindEdit.Text, i ,1)<>#32 then
+      begin
+        tmp[k]:=tmp[k]+copy(FindEdit.Text, i, 1);
+      end
+      else inc(k);
+      inc(i);
+    end;
+
     k:=0;
     e:=0;
     while k<>length(tmp) do
     begin
       if tmp[k]<>'' then
       begin
-        temp[e]:=#39+tmp[k]+#39+', ';
-        i:=e;
         inc(e);
       end;
       inc(k);
     end;
-    temp[i]:=copy(temp[i], 1,length(temp[i])-2);
-    if length(temp)>1 then
+
+    if RadioButton5.Checked=true then
     begin
-      k:=0;
-      filtered:='';
-      while k<>length(temp) do
-      begin
-        filtered:=filtered+temp[k];
-        inc(k);
+      try
+        TreeSet.Active:=false;
+        TreeSet.CommandText:='select DISTINCT d.article, c.name, c.mesabbrev as mesname, c.country, DECODE(c.accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'DECODE(c.datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'from smspec d, smdocuments p, supermag.smclientinfo u, smcard c, sacardclass s ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'where p.id = d.docid(+) ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'and u.id = p.clientindex ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'and d.article = c.article ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'and s.id = c.idclass ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'and d.doctype = ''WI'' ';
+        TreeSet.CommandText:=TreeSet.CommandText + 'and upper(u.name) like upper(''%'+copy(FindEdit.Text, 1, length(FindEdit.Text)-1)+'%'') ';
+        TreeSet.Active:=true;
+        DBGrid1.Enabled:=true;
+      except
+        //on E:Exception do ShowMessage(E.Message);
+      end;
+      Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+      //Exit;
+    end;
+
+    if RadioButton4.Checked=true then
+    begin
+      try
+        if (Access.Connected = false) then Access.Connected:=true;
+      except
+        FindEdit.SetFocus;
+        FindEdit.SelLength:=0;
+        FindEdit.SelStart:=Length(FindEdit.Text);
+        Exit;
       end;
       try
-        if ToggleAct.State=TToggleSwitchState.tssOff then
+        if (FindEdit.Text='') then exit;
+
+        filtered:='';
+        i:=0;
+        while i<>length(tmp) do
         begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            TreeSet.Active:=true;
-          end;
-        end
-        else
-        begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            TreeSet.Active:=true;
-          end;
+          filtered:=filtered+'clPlace like '+#39+'%'+tmp[i]+'%'+#39+' or ';
+          inc(i);
         end;
+        filtered:=copy(filtered, 1, length(filtered)-3);
       except
       end;
-    end
-    else
+
+      if filtered<>'' then
+      begin
+        try
+          Place_Query.Active:=false;
+          Place_Query.SQL.Clear;
+          Place_Query.SQL.Add('select clStrihkod from tblNaserver where '+filtered);
+          //ShowMessage(Place_Query.SQL.CommaText);
+          Place_Query.Active:=true;
+        except
+        end;
+        tmpf:='';
+        try
+          if Place_Query.RecordCount>0 then
+          begin
+            try
+              Place_Query.First;
+              while not Place_Query.Eof do
+              begin
+                tmpf:=tmpf+#39+Place_Query.FieldByName('clStrihkod').AsString+#39+', ';
+                Place_Query.Next;
+              end;
+              tmpf:=copy(tmpf, 1, length(tmpf)-2);
+            except
+            end;
+            try
+              MainForm.TreeView.OnChange(nil,MainForm.TreeView.Items.GetFirstNode);
+              try
+                BarcodeSet.Active:=false;
+                BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode in ('+tmpf+')';
+                BarcodeSet.Active:=true;
+              except
+                //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
+              end;
+              filtered:='';
+              BarcodeSet.First;
+              while not BarcodeSet.Eof do
+              begin
+                filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
+                BarcodeSet.Next;
+              end;
+              try
+                filtered:=copy(filtered, 1, length(filtered)-2);
+              except
+              end;
+              //ShowMessage(filtered);
+              if filtered='' then
+              begin
+                //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+                FindEdit.SetFocus;
+                FindEdit.SelLength:=0;
+                FindEdit.SelStart:=Length(FindEdit.Text);
+                Exit;
+              end;
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
+                //ShowMessage('#1: '+TreeSet.CommandText);
+                TreeSet.Active:=true;
+              except
+              end;
+              Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+              if TreeSet.RecordCount=0 then
+              begin
+                DBGrid1.Enabled:=false;
+                //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+              end
+              else
+              begin
+                DBGrid1.Enabled:=true;
+              end;
+              //Filter.Caption:='[Фильтр]';
+              Search.Caption:='[ Фильтр ]';
+            except
+            end;
+          end;
+        except
+        end;
+      end;
+    end;
+
+    //по артиклу
+    if RadioButton1.Checked=true then
     begin
-      SetLength(temp, 0);
-      SetLength(temp, count);
+      count:=e;
+      SetLength(temp, e);
       k:=0;
       e:=0;
       while k<>length(tmp) do
       begin
         if tmp[k]<>'' then
         begin
-          temp[e]:='%'+tmp[k];
+          temp[e]:=#39+tmp[k]+#39+', ';
           i:=e;
           inc(e);
         end;
         inc(k);
       end;
-      //temp[i]:=copy(temp[i], 1,length(temp[i])-2);
+      temp[i]:=copy(temp[i], 1,length(temp[i])-2);
+      if length(temp)>1 then
+      begin
+        k:=0;
+        filtered:='';
+        while k<>length(temp) do
+        begin
+          filtered:=filtered+temp[k];
+          inc(k);
+        end;
+        try
+          if ToggleAct.State=TToggleSwitchState.tssOff then
+          begin
+            if group='' then
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
+                TreeSet.Active:=true;
+              except
+              end;
+            end
+            else
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+                TreeSet.Active:=true;
+              except
+              end;
+            end;
+          end
+          else
+          begin
+            if group='' then
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
+                TreeSet.Active:=true;
+              except
+              end;
+            end
+            else
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+                TreeSet.Active:=true;
+              except
+              end;
+            end;
+          end;
+        except
+        end;
+      end
+      else
+      begin
+        SetLength(temp, 0);
+        SetLength(temp, count);
+        k:=0;
+        e:=0;
+        while k<>length(tmp) do
+        begin
+          if tmp[k]<>'' then
+          begin
+            temp[e]:='%'+tmp[k];
+            i:=e;
+            inc(e);
+          end;
+          inc(k);
+        end;
+        //temp[i]:=copy(temp[i], 1,length(temp[i])-2);
+        k:=0;
+        filtered:='';
+        while k<>length(temp) do
+        begin
+          filtered:=filtered+temp[k];
+          inc(k);
+        end;
+        try
+          if ToggleAct.State=TToggleSwitchState.tssOff then
+          begin
+            if group='' then
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
+                TreeSet.CommandText:=TreeSet.CommandText+'from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article like '''+filtered+'''';
+                TreeSet.Active:=true;
+              except
+              end;
+            end
+            else
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
+                TreeSet.CommandText:=TreeSet.CommandText+'from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article like '''+filtered+''' and s.tree like '+#39+group+'%'+#39;
+                TreeSet.Active:=true;
+              except
+              end;
+            end;
+          end
+          else
+          begin
+            if group='' then
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article like '''+filtered+'''';
+                TreeSet.Active:=true;
+              except
+              end;
+            end
+            else
+            begin
+              try
+                TreeSet.Active:=false;
+                TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+                TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article like '''+filtered+''' and s.tree like '+#39+group+'%'+#39;
+                TreeSet.Active:=true;
+              except
+              end;
+            end;
+          end;
+        except
+        end;
+      end;
+      Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+
+      if TreeSet.RecordCount=0 then
+      begin
+        DBGrid1.Enabled:=false;
+        //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+      end
+      else
+      begin
+        DBGrid1.Enabled:=true;
+      end;
+      //Filter.Caption:='[Фильтр]';
+      Search.Caption:='[ Фильтр ]';
+    end;
+
+    //по штрихкоду
+    if RadioButton2.Checked=true then
+    begin
+      filtered:='';
+      k:=0;
+      if length(tmp)>1 then
+      begin
+        while k<>length(tmp) do
+        begin
+          filtered:=filtered+#39+tmp[k]+#39+', ';
+          inc(k);
+        end;
+        try
+          filtered:=copy(filtered, 1, length(filtered)-2);
+        except
+        end;
+        try
+          BarcodeSet.Active:=false;
+          BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode in ('+filtered+')';
+          BarcodeSet.Active:=true;
+        except
+          //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
+        end;
+        filtered:='';
+        BarcodeSet.First;
+        while not BarcodeSet.Eof do
+        begin
+          filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
+          BarcodeSet.Next;
+        end;
+        try
+          filtered:=copy(filtered, 1, length(filtered)-2);
+        except
+        end;
+        //ShowMessage(filtered);
+        if filtered='' then
+        begin
+          //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+          Exit;
+        end;
+
+        try
+          if ToggleAct.State=TToggleSwitchState.tssOff then
+          begin
+            if group='' then
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
+              //ShowMessage('#1: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end
+            else
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+              //ShowMessage('#2: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end;
+          end
+          else
+          begin
+            if group='' then
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
+              //ShowMessage('#3: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end
+            else
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+              //ShowMessage('#4: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end;
+          end;
+        except
+        end;
+      end
+      else
+      begin
+        filtered:='';
+        filtered:='%'+tmp[k];
+        try
+          BarcodeSet.Active:=false;
+          BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode like '''+filtered+'''';
+          BarcodeSet.Active:=true;
+        except
+          //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
+        end;
+        filtered:='';
+        BarcodeSet.First;
+        while not BarcodeSet.Eof do
+        begin
+          filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
+          BarcodeSet.Next;
+        end;
+        try
+          filtered:=copy(filtered, 1, length(filtered)-2);
+        except
+        end;
+        //ShowMessage(filtered);
+        if filtered='' then
+        begin
+          //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+          Exit;
+        end;
+
+        try
+          if ToggleAct.State=TToggleSwitchState.tssOff then
+          begin
+            if group='' then
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
+              //ShowMessage('#1: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end
+            else
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+              //ShowMessage('#2: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end;
+          end
+          else
+          begin
+            if group='' then
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
+              //ShowMessage('#3: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end
+            else
+            begin
+              TreeSet.Active:=false;
+              TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+              TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
+              //ShowMessage('#4: '+TreeSet.CommandText);
+              TreeSet.Active:=true;
+            end;
+          end;
+        except
+        end;
+      end;
+      Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+
+      if TreeSet.RecordCount=0 then
+      begin
+        DBGrid1.Enabled:=false;
+        //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
+      end
+      else
+      begin
+        DBGrid1.Enabled:=true;
+      end;
+      Search.Caption:='[ Фильтр ]';
+    end;
+
+    //по наименованию
+    if RadioButton3.Checked=true then
+    begin
+      SetLength(temp, e);
+      k:=0;
+      e:=0;
+      while k<>length(tmp) do
+      begin
+        if tmp[k]<>'' then
+        begin
+          temp[e]:='LOWER(d.name) like '+#39+'%'+AnsiLowerCase(tmp[k])+'%'+#39+' and ';
+          i:=e;
+          inc(e);
+        end;
+        inc(k);
+      end;
+      temp[i]:=copy(temp[i], 1,length(temp[i])-5);
       k:=0;
       filtered:='';
       while k<>length(temp) do
@@ -4963,6 +5174,8 @@ begin
         filtered:=filtered+temp[k];
         inc(k);
       end;
+      filtered:=' '+filtered;
+
       try
         if ToggleAct.State=TToggleSwitchState.tssOff then
         begin
@@ -4970,16 +5183,14 @@ begin
           begin
             TreeSet.Active:=false;
             TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
-            TreeSet.CommandText:=TreeSet.CommandText+'from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article like '''+filtered+'''';
+            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+filtered;
             TreeSet.Active:=true;
           end
           else
           begin
             TreeSet.Active:=false;
             TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname ';
-            TreeSet.CommandText:=TreeSet.CommandText+'from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article like '''+filtered+''' and s.tree like '+#39+group+'%'+#39;
+            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+filtered+' and s.tree like '+#39+group+'%'+#39;
             TreeSet.Active:=true;
           end;
         end
@@ -4989,279 +5200,135 @@ begin
           begin
             TreeSet.Active:=false;
             TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article like '''+filtered+'''';
+            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and '+filtered;
             TreeSet.Active:=true;
           end
           else
           begin
             TreeSet.Active:=false;
             TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article like '''+filtered+''' and s.tree like '+#39+group+'%'+#39;
+            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and '+filtered+' and s.tree like '+#39+group+'%'+#39;
             TreeSet.Active:=true;
           end;
         end;
       except
       end;
-    end;
-    Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
+      Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
 
-    if TreeSet.RecordCount=0 then
-    begin
-      DBGrid1.Enabled:=false;
-      //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-    end
-    else
-    begin
-      DBGrid1.Enabled:=true;
-    end;
-    //Filter.Caption:='[Фильтр]';
-    Search.Caption:='[ Фильтр ]';
-  end;
-
-  //по штрихкоду
-  if RadioButton2.Checked=true then
-  begin
-    filtered:='';
-    k:=0;
-    if length(tmp)>1 then
-    begin
-      while k<>length(tmp) do
+      if TreeSet.RecordCount=0 then
       begin
-        filtered:=filtered+#39+tmp[k]+#39+', ';
-        inc(k);
-      end;
-      try
-        filtered:=copy(filtered, 1, length(filtered)-2);
-      except
-      end;
-      try
-        BarcodeSet.Active:=false;
-        BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode in ('+filtered+')';
-        BarcodeSet.Active:=true;
-      except
-        //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
-      end;
-      filtered:='';
-      BarcodeSet.First;
-      while not BarcodeSet.Eof do
-      begin
-        filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
-        BarcodeSet.Next;
-      end;
-      try
-        filtered:=copy(filtered, 1, length(filtered)-2);
-      except
-      end;
-      //ShowMessage(filtered);
-      if filtered='' then
-      begin
+        DBGrid1.Enabled:=false;
         //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-        Exit;
-      end;
-
-      try
-        if ToggleAct.State=TToggleSwitchState.tssOff then
-        begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
-            //ShowMessage('#1: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            //ShowMessage('#2: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end;
-        end
-        else
-        begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
-            //ShowMessage('#3: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            //ShowMessage('#4: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end;
-        end;
-      except
-      end;
-    end
-    else
-    begin
-      filtered:='';
-      filtered:='%'+tmp[k];
-      try
-        BarcodeSet.Active:=false;
-        BarcodeSet.CommandText:='select s.article, s.barcode from supermag.smstoreunits s where barcode like '''+filtered+'''';
-        BarcodeSet.Active:=true;
-      except
-        //On E:Exception do ShowMessage('Ошибка x'+IntToStr(E.HelpContext)+': '+E.Message+'.');
-      end;
-      filtered:='';
-      BarcodeSet.First;
-      while not BarcodeSet.Eof do
-      begin
-        filtered:=filtered+#39+BarcodeSet.FieldByName('article').AsString+#39+', ';
-        BarcodeSet.Next;
-      end;
-      try
-        filtered:=copy(filtered, 1, length(filtered)-2);
-      except
-      end;
-      //ShowMessage(filtered);
-      if filtered='' then
-      begin
-        //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-        Exit;
-      end;
-
-      try
-        if ToggleAct.State=TToggleSwitchState.tssOff then
-        begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+')';
-            //ShowMessage('#1: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            //ShowMessage('#2: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end;
-        end
-        else
-        begin
-          if group='' then
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+')';
-            //ShowMessage('#3: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end
-          else
-          begin
-            TreeSet.Active:=false;
-            TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-            TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and d.article in ('+filtered+') and s.tree like '+#39+group+'%'+#39;
-            //ShowMessage('#4: '+TreeSet.CommandText);
-            TreeSet.Active:=true;
-          end;
-        end;
-      except
-      end;
-    end;
-    Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
-
-    if TreeSet.RecordCount=0 then
-    begin
-      DBGrid1.Enabled:=false;
-      //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-    end
-    else
-    begin
-      DBGrid1.Enabled:=true;
-    end;
-    Search.Caption:='[ Фильтр ]';
-  end;
-
-  //по наименованию
-  if RadioButton3.Checked=true then
-  begin
-    SetLength(temp, e);
-    k:=0;
-    e:=0;
-    while k<>length(tmp) do
-    begin
-      if tmp[k]<>'' then
-      begin
-        temp[e]:='LOWER(d.name) like '+#39+'%'+AnsiLowerCase(tmp[k])+'%'+#39+' and ';
-        i:=e;
-        inc(e);
-      end;
-      inc(k);
-    end;
-    temp[i]:=copy(temp[i], 1,length(temp[i])-5);
-    k:=0;
-    filtered:='';
-    while k<>length(temp) do
-    begin
-      filtered:=filtered+temp[k];
-      inc(k);
-    end;
-    filtered:=' '+filtered;
-
-    try
-      if ToggleAct.State=TToggleSwitchState.tssOff then
-      begin
-        if group='' then
-        begin
-          TreeSet.Active:=false;
-          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+filtered;
-          TreeSet.Active:=true;
-        end
-        else
-        begin
-          TreeSet.Active:=false;
-          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+filtered+' and s.tree like '+#39+group+'%'+#39;
-          TreeSet.Active:=true;
-        end;
       end
       else
       begin
-        if group='' then
+        DBGrid1.Enabled:=true;
+      end;
+      //Filter.Caption:='[Фильтр]';
+      Search.Caption:='[ Фильтр ]';
+    end;
+  end;
+  if checkbox4.Checked=true then
+  begin
+    if FindEdit.Text<>'' then
+    begin
+      FindEdit.Text:=ClearField(FindEdit.Text);
+      {
+      if length(FindEdit.Text)=12 then
+      begin
+        FindEdit.Text:=copy(FindEdit.Text, 5, 7);
+      end;
+      }
+      try
+        OraZPC.Active:=false;
+        OraZPC.SQL.Clear;
+        OraZPC.SQL.Add('select s.article, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
+        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity from smgoods g where g.storeloc=''19'' group by g.article) gs, smstoreunits sb ');
+        OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
+        OraZPC.SQL.Add('and d.id = a.id ');
+        OraZPC.SQL.Add('and c.id = a.ourselfclient ');
+        OraZPC.SQL.Add('and d.location = l.id ');
+        OraZPC.SQL.Add('and s.docid = d.id ');
+        OraZPC.SQL.Add('and ds.article = s.article ');
+        OraZPC.SQL.Add('and sb.article = s.article ');
+        OraZPC.SQL.Add('and gs.article = s.article ');
+        OraZPC.SQL.Add('group by s.article ');
+        OraZPC.Active:=true;
+        try
+          ZPC_Query.Active:=false;
+          ZPC_Query.SQL.Clear;
+          ZPC_Query.SQL.Add('delete from zpc where groupid='''+Auth.groupid+'''');
+          ZPC_Query.ExecSQL;
+        except
+          On E:Exception do ShowMessage('Ошибка [1]: '+E.Message);
+        end;
+        if OraZPC.RecordCount>0 then
         begin
-          TreeSet.Active:=false;
-          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and '+filtered;
-          TreeSet.Active:=true;
-        end
-        else
+          while not OraZPC.Eof do
+          begin
+            try
+              zpc_place:='';
+              Place_Query2.Active:=false;
+              Place_Query2.SQL.Clear;
+              Place_Query2.SQL.Add('select clPlace from tblNaserver where clArticle='''+OraZPC.FieldByName('article').AsString+'''');
+              Place_Query2.Active:=true;
+              while not Place_Query2.Eof do
+              begin
+                zpc_place:=zpc_place+Place_Query2.FieldByName('clPlace').AsString+';';
+                Place_Query2.Next;
+              end;
+              zpc_place:=copy(zpc_place, 1, length(zpc_place)-1);
+            except
+              On E:Exception do ShowMessage('Ошибка [2]: '+E.Message);
+            end;
+            try
+              ZPC_Query.Active:=false;
+              ZPC_Query.SQL.Clear;
+              ZPC_Query.SQL.Add('insert into zpc(zpc_num, barcode, sender, getter, article, name, quan, edism, ost, clPlace, groupid) values('''+OraZPC.FieldByName('zpc').AsString+''', '''+OraZPC.FieldByName('barcode').AsString+''', '''+OraZPC.FieldByName('sender').AsString+''', '''+OraZPC.FieldByName('getter').AsString+''', '''+OraZPC.FieldByName('article').AsString+''', '''+ClearSQL(OraZPC.FieldByName('name').AsString)+''', '''+OraZPC.FieldByName('quan').AsString+''', '''+OraZPC.FieldByName('edism').AsString+''', '''+OraZPC.FieldByName('ost').AsString+''', '''+zpc_place+''', '''+Auth.groupid+''')');
+              ZPC_Query.ExecSQL;
+            except
+              On E:Exception do ShowMessage('Ошибка [3]: '+E.Message);
+            end;
+            OraZPC.Next;
+          end;
+          try
+            ZPC_Query.Active:=false;
+            ZPC_Query.SQL.Clear;
+            ZPC_Query.SQL.Add('select * from zpc where groupid='''+Auth.groupid+''' order by name');
+            ZPC_Query.Active:=true;
+          except
+            On E:Exception do ShowMessage('Ошибка [4]: '+E.Message);
+          end;
+        end;
+        FindEdit.SetFocus;
+        FindEdit.SelLength:=0;
+        FindEdit.SelStart:=Length(FindEdit.Text);
+      except
+        On E:Exception do
         begin
-          TreeSet.Active:=false;
-          TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
-          TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and '+filtered+' and s.tree like '+#39+group+'%'+#39;
-          TreeSet.Active:=true;
+          ShowMessage('Ошибка [4]: '+E.Message);
+          Exit;
         end;
       end;
-    except
+      try
+        dir:=ExtractFilePath(ParamStr(0));
+        ZPCReport.LoadFromFile(dir+'FR\ZPC.fr3');
+        ZPCReport.PrintOptions.ShowDialog:=true;
+        ZPCReport.PrepareReport(true);
+        ZPCReport.ShowPreparedReport;
+        ZPCReport.Clear;
+      except
+        ShowMessage('Вывод отчета завершен с ошибкой.');
+        FindEdit.SetFocus;
+        FindEdit.SelLength:=0;
+        FindEdit.SelStart:=Length(FindEdit.Text);
+        Exit;
+      end;
     end;
-    Cartoons.Caption:='Карточек отобрано: '+IntToStr(TreeSet.RecordCount);
-
-    if TreeSet.RecordCount=0 then
-    begin
-      DBGrid1.Enabled:=false;
-      //ShowMessage('Ваш запрос не выдал никаких результатов!'+#13+'Пожалуйста повторите поиск изменив текст запроса или группу товаров.');
-    end
-    else
-    begin
-      DBGrid1.Enabled:=true;
-    end;
-    //Filter.Caption:='[Фильтр]';
-    Search.Caption:='[ Фильтр ]';
+    FindEdit.SetFocus;
+    FindEdit.SelLength:=0;
+    FindEdit.SelStart:=Length(FindEdit.Text);
+    Exit;
   end;
 end;
 
