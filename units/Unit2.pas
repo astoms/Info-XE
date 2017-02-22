@@ -4172,7 +4172,7 @@ begin
   TreeView.DragMode:=dmManual;
   if PageControl1.ActivePageIndex=11 then
   begin
-    TreeView.DragMode:=dmAutomatic;
+    //TreeView.DragMode:=dmAutomatic;
     combobox3.Text:=Auth.magazin;
     bitbtn15.Click;
   end;
@@ -5720,23 +5720,23 @@ procedure TMainForm.TreeViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Node:TTreeNode;
 begin
-  Node:=TreeView.GetNodeAt(X,Y);
+  {Node:=TreeView.GetNodeAt(X,Y);
   if Node<>nil then
   begin
     if Shift = [ssLeft] then
     begin
       TreeView.BeginDrag(true, 0);
     end;
-  end;
+  end; }
 end;
 
 procedure TMainForm.TreeViewMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if Shift = [ssLeft] then
+  {if Shift = [ssLeft] then
   begin
     TreeView.EndDrag(true);
-  end;
+  end;  }
 end;
 
 procedure TMainForm.WB_LoadHTML(WebBrowser: TWebBrowser; HTMLCode: string);

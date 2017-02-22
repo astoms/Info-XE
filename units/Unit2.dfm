@@ -19512,7 +19512,7 @@
             Margins.Top = 5
             Margins.Right = 5
             Margins.Bottom = 5
-            ActivePage = TabSheet1
+            ActivePage = TabSheet15
             Align = alClient
             Font.Charset = RUSSIAN_CHARSET
             Font.Color = clWindowText
