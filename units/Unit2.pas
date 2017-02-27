@@ -512,6 +512,8 @@ type
     TvGrid:array of boolean;
     TvExt:boolean;
     procedure HideMes();
+    function GetCop(value:string):string;
+    function GetRub(value:string):string;
     procedure ChSearch();
     function ClearField(value:string):string;
     function ClearSQL(value:string):string;
@@ -1800,17 +1802,18 @@ begin
           //
 
           try
-            StrToFloat(Excel.Cells[i,14].Text);
+            //StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
             name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
-              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              action_def_r:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              action_def_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
             except
             end;
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
@@ -1861,29 +1864,30 @@ begin
           //
 
           try
-            StrToFloat(Excel.Cells[i,14].Text);
+            //StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
             name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
-              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              action_def_r:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              action_def_k:=GetCop(SetPoint(action_def));
             except
             end;
             action_def:=Excel.Cells[i,18].Text;
             try
-              price_dr:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              price_dr:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              price_dk:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              price_dk:=GetCop(SetPoint(action_def));
             except
             end;
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+            if length(price_dk)=1 then price_dk:=price_dk+'0';
             try
               TreeSet.Active:=false;
               TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
@@ -3852,6 +3856,27 @@ begin
   TreeView.HideSelection:=false;
 end;
 
+function TMainForm.GetCop(value: string): string;
+var temp:string; ext:boolean; i:integer;
+begin
+  temp:='';
+  i:=1;
+  ext:=false;
+  while i<=length(value) do
+  begin
+    if (ext) then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    if ((copy(value, i, 1) = ',') or (copy(value, i, 1) = '.')) then
+    begin
+      ext:=true;
+    end;
+    inc(i);
+  end;
+  Result:=temp;
+end;
+
 procedure TMainForm.GetGroup;
 //var Group:TNewThread;
 begin
@@ -3861,6 +3886,27 @@ begin
   Group.Priority:=tpNormal;
   Group.Resume;
   }
+end;
+
+function TMainForm.GetRub(value: string): string;
+var temp:string; ext:boolean; i:integer;
+begin
+  temp:='';
+  i:=1;
+  ext:=false;
+  while i<=length(value) do
+  begin
+    if ((copy(value, i, 1) = ',') or (copy(value, i, 1) = '.')) then
+    begin
+      ext:=true;
+    end;
+    if (ext=false) then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  Result:=temp;
 end;
 
 function TMainForm.GridSelectAll(Grid: TDBGrid): Longint;
@@ -5242,17 +5288,18 @@ begin
       try
         OraZPC.Active:=false;
         OraZPC.SQL.Clear;
-        OraZPC.SQL.Add('select s.article, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
-        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity from smgoods g where g.storeloc=''19'' group by g.article) gs, smstoreunits sb ');
+        OraZPC.SQL.Add('select s.article, d.location, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
+        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity, g.storeloc from smgoods g group by g.article, g.storeloc) gs, smstoreunits sb ');
         OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
         OraZPC.SQL.Add('and d.id = a.id ');
         OraZPC.SQL.Add('and c.id = a.ourselfclient ');
         OraZPC.SQL.Add('and d.location = l.id ');
+        OraZPC.SQL.Add('and gs.storeloc = d.location ');
         OraZPC.SQL.Add('and s.docid = d.id ');
         OraZPC.SQL.Add('and ds.article = s.article ');
         OraZPC.SQL.Add('and sb.article = s.article ');
         OraZPC.SQL.Add('and gs.article = s.article ');
-        OraZPC.SQL.Add('group by s.article ');
+        OraZPC.SQL.Add('group by s.article, d.location ');
         OraZPC.Active:=true;
         try
           ZPC_Query.Active:=false;
