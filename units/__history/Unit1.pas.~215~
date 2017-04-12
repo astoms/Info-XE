@@ -93,7 +93,7 @@ type
 var
   Auth: TAuth;
 
-const ver='2.0.0.6';
+const ver='2.0.0.9';
 
 implementation
 
@@ -694,6 +694,7 @@ begin
   inherited;
 
   try
+    {
     if (Auth.ServerDB.Text='ASTOMS5') then
     begin
       try
@@ -702,12 +703,11 @@ begin
       except
       end;
     end;
+    }
+
     if (Auth.ServerDB.Text='MILE_CO') then
     begin
       try
-        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=i:\InfoDataBase.mdb;Persist Security Info=True';
-        MainForm.Access.Connected:=true;
-        {
         if Auth.Sklad then
         begin
           MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=S:\Mile_Sklad\db\InfoDataBase.mdb;Persist Security Info=True';
@@ -722,7 +722,6 @@ begin
           end
           else ShowMessage('Соединение с базой данных скалада не было установлено!'+#13+'Пожалуйста сообщите об этом системному администратору!');
         end;
-        }
       except
       end;
     end;
@@ -738,6 +737,8 @@ begin
       except
       end;
     end;
+
+    {
     if (Auth.ServerDB.Text='Mogilev') then
     begin
       try
@@ -746,6 +747,8 @@ begin
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='MILE_MOG') then
     begin
       try
@@ -754,6 +757,8 @@ begin
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='MILE_MOMO') then
     begin
       try
@@ -762,6 +767,8 @@ begin
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='NOVOSEL') then
     begin
       try
@@ -770,6 +777,7 @@ begin
       except
       end;
     end;
+    }
   except
   end;
 

@@ -93,7 +93,7 @@ type
 var
   Auth: TAuth;
 
-const ver='2.0.0.6';
+const ver='2.0.0.9';
 
 implementation
 
@@ -692,8 +692,9 @@ end;
 procedure TConnAccess.Execute;
 begin
   inherited;
-  {
+
   try
+    {
     if (Auth.ServerDB.Text='ASTOMS5') then
     begin
       try
@@ -702,6 +703,9 @@ begin
       except
       end;
     end;
+    }
+
+    {
     if (Auth.ServerDB.Text='MILE_CO') then
     begin
       try
@@ -734,14 +738,18 @@ begin
       except
       end;
     end;
-    if (Auth.ServerDB.Text='Mogilev') then
+
+
+    if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then
     begin
       try
-        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=S:\Mile_mogilev\priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
+        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=s:\mile_Тимирязева\Priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
         MainForm.Access.Connected:=true;
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='MILE_MOG') then
     begin
       try
@@ -750,6 +758,8 @@ begin
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='MILE_MOMO') then
     begin
       try
@@ -758,6 +768,8 @@ begin
       except
       end;
     end;
+    }
+    {
     if (Auth.ServerDB.Text='NOVOSEL') then
     begin
       try
@@ -766,9 +778,10 @@ begin
       except
       end;
     end;
+    }
   except
   end;
-  }
+
   terminate;
 end;
 

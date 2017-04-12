@@ -307,6 +307,7 @@ type
     ListBox1: TListBox;
     OraPos: TADOQuery;
     RadioButton5: TRadioButton;
+    Label24: TLabel;
     procedure FormShow(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -512,7 +513,10 @@ type
     TvGrid:array of boolean;
     TvExt:boolean;
     procedure HideMes();
+    function GetCop(value:string):string;
+    function GetRub(value:string):string;
     procedure ChSearch();
+    function ClearField(value:string):string;
     function ClearSQL(value:string):string;
     function DelPers(value:string):string;
     function GridSelectAll(Grid: TDBGrid): Longint;
@@ -1799,17 +1803,18 @@ begin
           //
 
           try
-            StrToFloat(Excel.Cells[i,14].Text);
+            //StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
             name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
-              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              action_def_r:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              action_def_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
             except
             end;
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
@@ -1860,29 +1865,30 @@ begin
           //
 
           try
-            StrToFloat(Excel.Cells[i,14].Text);
+            //StrToFloat(Excel.Cells[i,14].Text);
             article:='article = '+#39+Excel.Cells[i,14].Text+#39;
             name:=Excel.Cells[i,22].Text;
             action_price:=DelPers(Excel.Cells[i,21].Text);
             action_def:=Excel.Cells[i,17].Text;
             try
-              action_def_r:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              action_def_r:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              action_def_k:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              action_def_k:=GetCop(SetPoint(action_def));
             except
             end;
             action_def:=Excel.Cells[i,18].Text;
             try
-              price_dr:=FloatToStr(Trunc(StrToFloat(SetPoint(action_def))));
+              price_dr:=GetRub(SetPoint(action_def));
             except
             end;
             try
-              price_dk:=FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+              price_dk:=GetCop(SetPoint(action_def));
             except
             end;
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
+            if length(price_dk)=1 then price_dk:=price_dk+'0';
             try
               TreeSet.Active:=false;
               TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
@@ -2186,6 +2192,22 @@ begin
   end;
 end;
 
+function TMainForm.ClearField(value: string): string;
+var i:integer; temp:string;
+begin
+  temp:='';
+  i:=1;
+  while i<=length(value) do
+  begin
+    if ((copy(value, i, 1)<>' ') and (copy(value, i, 1)<>'З') and (copy(value, i, 1)<>'П') and (copy(value, i, 1)<>'Ц'))  then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  result:=temp;
+end;
+
 function TMainForm.ClearSQL(value: string): string;
 var i:integer; temp:string;
 begin
@@ -2408,6 +2430,40 @@ begin
       //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
     end;
     Application.ProcessMessages;
+
+
+    try
+      Place_Query3.Active:=false;
+      Place_Query3.SQL.Clear;
+      Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
+      Place_Query3.Active:=true;
+
+      clPlace.Items.Clear;
+      Label24.Caption:='Количество на складе: ';
+      temp:=Place_Query3.FieldByName('place').AsString;
+      List:=TStringList.Create;
+      List.Duplicates:=dupIgnore;
+      List.Delimiter:=';';
+      List.DelimitedText:=temp;
+
+      i:=0;
+      while i<>List.Count do
+      begin
+        if List.Strings[i]<>'' then
+        begin
+          if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+        end;
+        inc(i);
+      end;
+
+      Label24.Caption:='Количество на складе: '+Place_Query3.FieldByName('count').AsString;
+
+    except
+
+    end;
+
+    {
+
     try
       if (Access.Connected=false) then
       begin
@@ -2450,6 +2506,7 @@ begin
       end;
     except
     end;
+
     try
       PriceSet.Active:=false;
       PriceSet.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
@@ -2457,6 +2514,9 @@ begin
     except
       //on E:Exception do ShowMessage('Ошибка 0cv2324x354342: '+E.Message);
     end;
+
+    }
+
     try
       OraPos.Active:=false;
       OraPos.SQL.Clear;
@@ -3835,6 +3895,27 @@ begin
   TreeView.HideSelection:=false;
 end;
 
+function TMainForm.GetCop(value: string): string;
+var temp:string; ext:boolean; i:integer;
+begin
+  temp:='';
+  i:=1;
+  ext:=false;
+  while i<=length(value) do
+  begin
+    if (ext) then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    if ((copy(value, i, 1) = ',') or (copy(value, i, 1) = '.')) then
+    begin
+      ext:=true;
+    end;
+    inc(i);
+  end;
+  Result:=temp;
+end;
+
 procedure TMainForm.GetGroup;
 //var Group:TNewThread;
 begin
@@ -3844,6 +3925,27 @@ begin
   Group.Priority:=tpNormal;
   Group.Resume;
   }
+end;
+
+function TMainForm.GetRub(value: string): string;
+var temp:string; ext:boolean; i:integer;
+begin
+  temp:='';
+  i:=1;
+  ext:=false;
+  while i<=length(value) do
+  begin
+    if ((copy(value, i, 1) = ',') or (copy(value, i, 1) = '.')) then
+    begin
+      ext:=true;
+    end;
+    if (ext=false) then
+    begin
+      temp:=temp+copy(value, i, 1);
+    end;
+    inc(i);
+  end;
+  Result:=temp;
 end;
 
 function TMainForm.GridSelectAll(Grid: TDBGrid): Longint;
@@ -4155,7 +4257,7 @@ begin
   TreeView.DragMode:=dmManual;
   if PageControl1.ActivePageIndex=11 then
   begin
-    TreeView.DragMode:=dmAutomatic;
+    //TreeView.DragMode:=dmAutomatic;
     combobox3.Text:=Auth.magazin;
     bitbtn15.Click;
   end;
@@ -4545,107 +4647,8 @@ end;
 
 procedure TMainForm.SearchClick(Sender: TObject);
 var i,k,e, count:integer; tmp,temp:array of string; filtered:string;
-    getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string;
+    getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string; List:TStringList;
 begin
-  if checkbox4.Checked=true then
-  begin
-    if FindEdit.Text<>'' then
-    begin
-      if length(FindEdit.Text)=12 then
-      begin
-        FindEdit.Text:=copy(FindEdit.Text, 5, 7);
-      end;
-      try
-        OraZPC.Active:=false;
-        OraZPC.SQL.Clear;
-        OraZPC.SQL.Add('select s.article, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
-        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity from smgoods g where g.storeloc=''19'' group by g.article) gs, smstoreunits sb ');
-        OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
-        OraZPC.SQL.Add('and d.id = a.id ');
-        OraZPC.SQL.Add('and c.id = a.ourselfclient ');
-        OraZPC.SQL.Add('and d.location = l.id ');
-        OraZPC.SQL.Add('and s.docid = d.id ');
-        OraZPC.SQL.Add('and ds.article = s.article ');
-        OraZPC.SQL.Add('and sb.article = s.article ');
-        OraZPC.SQL.Add('and gs.article = s.article ');
-        OraZPC.SQL.Add('group by s.article ');
-        OraZPC.Active:=true;
-        try
-          ZPC_Query.Active:=false;
-          ZPC_Query.SQL.Clear;
-          ZPC_Query.SQL.Add('delete from zpc where groupid='''+Auth.groupid+'''');
-          ZPC_Query.ExecSQL;
-        except
-          On E:Exception do ShowMessage('Ошибка [1]: '+E.Message);
-        end;
-        if OraZPC.RecordCount>0 then
-        begin
-          while not OraZPC.Eof do
-          begin
-            try
-              zpc_place:='';
-              Place_Query2.Active:=false;
-              Place_Query2.SQL.Clear;
-              Place_Query2.SQL.Add('select clPlace from tblNaserver where clArticle='''+OraZPC.FieldByName('article').AsString+'''');
-              Place_Query2.Active:=true;
-              while not Place_Query2.Eof do
-              begin
-                zpc_place:=zpc_place+Place_Query2.FieldByName('clPlace').AsString+';';
-                Place_Query2.Next;
-              end;
-              zpc_place:=copy(zpc_place, 1, length(zpc_place)-1);
-            except
-              On E:Exception do ShowMessage('Ошибка [2]: '+E.Message);
-            end;
-            try
-              ZPC_Query.Active:=false;
-              ZPC_Query.SQL.Clear;
-              ZPC_Query.SQL.Add('insert into zpc(zpc_num, barcode, sender, getter, article, name, quan, edism, ost, clPlace, groupid) values('''+OraZPC.FieldByName('zpc').AsString+''', '''+OraZPC.FieldByName('barcode').AsString+''', '''+OraZPC.FieldByName('sender').AsString+''', '''+OraZPC.FieldByName('getter').AsString+''', '''+OraZPC.FieldByName('article').AsString+''', '''+ClearSQL(OraZPC.FieldByName('name').AsString)+''', '''+OraZPC.FieldByName('quan').AsString+''', '''+OraZPC.FieldByName('edism').AsString+''', '''+OraZPC.FieldByName('ost').AsString+''', '''+zpc_place+''', '''+Auth.groupid+''')');
-              ZPC_Query.ExecSQL;
-            except
-              On E:Exception do ShowMessage('Ошибка [3]: '+E.Message);
-            end;
-            OraZPC.Next;
-          end;
-          try
-            ZPC_Query.Active:=false;
-            ZPC_Query.SQL.Clear;
-            ZPC_Query.SQL.Add('select * from zpc where groupid='''+Auth.groupid+''' order by name');
-            ZPC_Query.Active:=true;
-          except
-            On E:Exception do ShowMessage('Ошибка [4]: '+E.Message);
-          end;
-        end;
-        FindEdit.SetFocus;
-        FindEdit.SelLength:=0;
-        FindEdit.SelStart:=Length(FindEdit.Text);
-      except
-        On E:Exception do
-        begin
-          ShowMessage('Ошибка [4]: '+E.Message);
-          Exit;
-        end;
-      end;
-      try
-        dir:=ExtractFilePath(ParamStr(0));
-        ZPCReport.LoadFromFile(dir+'FR\ZPC.fr3');
-        ZPCReport.PrintOptions.ShowDialog:=true;
-        ZPCReport.PrepareReport(true);
-        ZPCReport.ShowPreparedReport;
-        ZPCReport.Clear;
-      except
-        ShowMessage('Вывод отчета завершен с ошибкой.');
-        FindEdit.SetFocus;
-        FindEdit.SelLength:=0;
-        FindEdit.SelStart:=Length(FindEdit.Text);
-        Exit;
-      end;
-    end;
-    FindEdit.SetFocus;
-    FindEdit.SelLength:=0;
-    FindEdit.SelStart:=Length(FindEdit.Text);
-    Exit;
-  end;
   if checkbox3.Checked=true then
   begin
     if FindEdit.Text<>'' then
@@ -5310,6 +5313,152 @@ begin
       Search.Caption:='[ Фильтр ]';
     end;
   end;
+  if checkbox4.Checked=true then
+  begin
+    if FindEdit.Text<>'' then
+    begin
+      FindEdit.Text:=ClearField(FindEdit.Text);
+      {
+      if length(FindEdit.Text)=12 then
+      begin
+        FindEdit.Text:=copy(FindEdit.Text, 5, 7);
+      end;
+      }
+      try
+        OraZPC.Active:=false;
+        OraZPC.SQL.Clear;
+        OraZPC.SQL.Add('select s.article, d.location, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
+        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity, g.storeloc from smgoods g group by g.article, g.storeloc) gs, smstoreunits sb ');
+        OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
+        OraZPC.SQL.Add('and d.id = a.id ');
+        OraZPC.SQL.Add('and c.id = a.ourselfclient ');
+        OraZPC.SQL.Add('and d.location = l.id ');
+        OraZPC.SQL.Add('and gs.storeloc = d.location ');
+        OraZPC.SQL.Add('and s.docid = d.id ');
+        OraZPC.SQL.Add('and ds.article = s.article ');
+        OraZPC.SQL.Add('and sb.article = s.article ');
+        OraZPC.SQL.Add('and gs.article = s.article ');
+        OraZPC.SQL.Add('group by s.article, d.location ');
+        OraZPC.Active:=true;
+        try
+          ZPC_Query.Active:=false;
+          ZPC_Query.SQL.Clear;
+          ZPC_Query.SQL.Add('delete from zpc where groupid='''+Auth.groupid+'''');
+          ZPC_Query.ExecSQL;
+        except
+          On E:Exception do ShowMessage('Ошибка [1]: '+E.Message);
+        end;
+        if OraZPC.RecordCount>0 then
+        begin
+          while not OraZPC.Eof do
+          begin
+
+            try
+              BarcodeSet.Active:=false;
+              BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+OraZPC.FieldByName('article').AsString+'''';
+              BarcodeSet.Active:=true;
+            except
+              //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
+            end;
+
+            Application.ProcessMessages;
+            try
+              if (Access.Connected=false) then
+              begin
+                Access.Connected:=true;
+              end;
+              if (Access.Connected) then
+              begin
+                clPlace.Items.Clear;
+                zpc_place:='';
+                DBGrid2.DataSource.DataSet.First;
+                while not DBGrid2.DataSource.DataSet.Eof do
+                begin
+                  Place_Query.Active:=false;
+                  Place_Query.SQL.Clear;
+                  Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
+                  Place_Query.Active:=true;
+                  Place_Query.First;
+                  while not Place_Query.Eof do
+                  begin
+                    zpc_place:=zpc_place+Place_Query.FieldByName('clPlace').AsString+';';
+                    Place_Query.Next;
+                  end;
+                  DBGrid2.DataSource.DataSet.Next;
+                end;
+
+                List:=TStringList.Create;
+                List.Duplicates:=dupIgnore;
+                List.Delimiter:=';';
+                List.DelimitedText:=zpc_place;
+                zpc_place:='';
+                i:=0;
+                while i<>List.Count do
+                begin
+                  if List.Strings[i]<>'' then
+                  begin
+                    if (clPlace.Items.IndexOf(List.Strings[i])=-1) then
+                    begin
+                      clPlace.Items.Add(List.Strings[i]);
+                      zpc_place:=zpc_place+List.Strings[i]+';';
+                    end;
+                  end;
+                  inc(i);
+                end;
+
+              end;
+            except
+            end;
+
+            try
+              ZPC_Query.Active:=false;
+              ZPC_Query.SQL.Clear;
+              ZPC_Query.SQL.Add('insert into zpc(zpc_num, barcode, sender, getter, article, name, quan, edism, ost, clPlace, groupid) values('''+OraZPC.FieldByName('zpc').AsString+''', '''+OraZPC.FieldByName('barcode').AsString+''', '''+OraZPC.FieldByName('sender').AsString+''', '''+OraZPC.FieldByName('getter').AsString+''', '''+OraZPC.FieldByName('article').AsString+''', '''+ClearSQL(OraZPC.FieldByName('name').AsString)+''', '''+OraZPC.FieldByName('quan').AsString+''', '''+OraZPC.FieldByName('edism').AsString+''', '''+OraZPC.FieldByName('ost').AsString+''', '''+zpc_place+''', '''+Auth.groupid+''')');
+              ZPC_Query.ExecSQL;
+            except
+              On E:Exception do ShowMessage('Ошибка [3]: '+E.Message);
+            end;
+            OraZPC.Next;
+          end;
+          try
+            ZPC_Query.Active:=false;
+            ZPC_Query.SQL.Clear;
+            ZPC_Query.SQL.Add('select * from zpc where groupid='''+Auth.groupid+''' order by name');
+            ZPC_Query.Active:=true;
+          except
+            On E:Exception do ShowMessage('Ошибка [4]: '+E.Message);
+          end;
+        end;
+        FindEdit.SetFocus;
+        FindEdit.SelLength:=0;
+        FindEdit.SelStart:=Length(FindEdit.Text);
+      except
+        On E:Exception do
+        begin
+          ShowMessage('Ошибка [4]: '+E.Message);
+          Exit;
+        end;
+      end;
+      try
+        dir:=ExtractFilePath(ParamStr(0));
+        ZPCReport.LoadFromFile(dir+'FR\ZPC.fr3');
+        ZPCReport.PrintOptions.ShowDialog:=true;
+        ZPCReport.PrepareReport(true);
+        ZPCReport.ShowPreparedReport;
+        ZPCReport.Clear;
+      except
+        ShowMessage('Вывод отчета завершен с ошибкой.');
+        FindEdit.SetFocus;
+        FindEdit.SelLength:=0;
+        FindEdit.SelStart:=Length(FindEdit.Text);
+        Exit;
+      end;
+    end;
+    FindEdit.SetFocus;
+    FindEdit.SelLength:=0;
+    FindEdit.SelStart:=Length(FindEdit.Text);
+    Exit;
+  end;
 end;
 
 procedure TMainForm.SendEditKeyDown(Sender: TObject; var Key: Word;
@@ -5700,23 +5849,23 @@ procedure TMainForm.TreeViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var Node:TTreeNode;
 begin
-  Node:=TreeView.GetNodeAt(X,Y);
+  {Node:=TreeView.GetNodeAt(X,Y);
   if Node<>nil then
   begin
     if Shift = [ssLeft] then
     begin
       TreeView.BeginDrag(true, 0);
     end;
-  end;
+  end; }
 end;
 
 procedure TMainForm.TreeViewMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if Shift = [ssLeft] then
+  {if Shift = [ssLeft] then
   begin
     TreeView.EndDrag(true);
-  end;
+  end;  }
 end;
 
 procedure TMainForm.WB_LoadHTML(WebBrowser: TWebBrowser; HTMLCode: string);

@@ -705,6 +705,7 @@ begin
     end;
     }
 
+
     if (Auth.ServerDB.Text='MILE_CO') then
     begin
       try
@@ -738,16 +739,16 @@ begin
       end;
     end;
 
-    {
-    if (Auth.ServerDB.Text='Mogilev') then
+
+    if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then
     begin
       try
-        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=S:\Mile_mogilev\priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
+        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=s:\mile_Тимирязева\Priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
         MainForm.Access.Connected:=true;
       except
       end;
     end;
-    }
+
     {
     if (Auth.ServerDB.Text='MILE_MOG') then
     begin

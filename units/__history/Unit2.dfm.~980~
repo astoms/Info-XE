@@ -19512,7 +19512,7 @@
             Margins.Top = 5
             Margins.Right = 5
             Margins.Bottom = 5
-            ActivePage = TabSheet10
+            ActivePage = TabSheet1
             Align = alClient
             Font.Charset = RUSSIAN_CHARSET
             Font.Color = clWindowText
@@ -23230,7 +23230,7 @@
                   BevelOuter = bvNone
                   Date = 42578.666853148150000000
                   Time = 42578.666853148150000000
-                  MaxDate = 43100.999988425920000000
+                  MaxDate = 43100.999988425930000000
                   MinDate = 42370.000000000000000000
                   TabOrder = 2
                   Visible = False
@@ -23761,7 +23761,7 @@
     Left = 48
     Top = 328
     Bitmap = {
-      494C01010200C400E40110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200C400F00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -25625,7 +25625,7 @@
           Frame.Typ = [ftLeft]
         end
         object Line12: TfrxLineView
-          Left = 718.110236220472000000
+          Left = 718.110236220471900000
           Height = 64.252010000000000000
           Color = clBlack
           Frame.Typ = [ftLeft]

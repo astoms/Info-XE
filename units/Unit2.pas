@@ -307,6 +307,8 @@ type
     ListBox1: TListBox;
     OraPos: TADOQuery;
     RadioButton5: TRadioButton;
+    Label24: TLabel;
+    BitBtn42: TBitBtn;
     procedure FormShow(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -488,6 +490,7 @@ type
     procedure FindEditKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure RadioButton5Click(Sender: TObject);
     procedure DBGrid1CellClick(Column: TColumn);
+    procedure BitBtn42Click(Sender: TObject);
   private
     group:string;
     Half:byte;
@@ -1541,6 +1544,114 @@ begin
   Screen.Cursor := crDefault;
 end;
 
+procedure TMainForm.BitBtn42Click(Sender: TObject);
+var temp:string; List, List2:TStringList; i:integer;
+begin
+
+  try
+    Place_Query3.Active:=false;
+    Place_Query3.SQL.Clear;
+    Place_Query3.SQL.Add('select article, place, count from place_sklad');
+    Place_Query3.Active:=true;
+    Place_Query3.First;
+    while not Place_Query3.Eof do
+    begin
+      try
+        BarcodeSet.Active:=false;
+        BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Place_Query3.FieldByName('article').AsString+'''';
+        BarcodeSet.Active:=true;
+      except
+      end;
+      Application.ProcessMessages;
+
+      if (Access.Connected=false) then
+      begin
+        Access.Connected:=true;
+      end;
+
+      if (Access.Connected) then
+      begin
+        clPlace.Items.Clear;
+        temp:='';
+        DBGrid2.DataSource.DataSet.First;
+        while not DBGrid2.DataSource.DataSet.Eof do
+        begin
+          Place_Query.Active:=false;
+          Place_Query.SQL.Clear;
+          Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
+          Place_Query.Active:=true;
+          Place_Query.First;
+          while not Place_Query.Eof do
+          begin
+            temp:=temp+Place_Query.FieldByName('clPlace').AsString+';';
+            Place_Query.Next;
+          end;
+          DBGrid2.DataSource.DataSet.Next;
+        end;
+
+        List:=TStringList.Create;
+        List.Duplicates:=dupIgnore;
+        List.Delimiter:=';';
+        List.DelimitedText:=temp;
+
+        i:=0;
+        while i<>List.Count do
+        begin
+          if List.Strings[i]<>'' then
+          begin
+            if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+          end;
+          inc(i);
+        end;
+
+        List2:=TStringList.Create;
+        List.Duplicates:=dupIgnore;
+        List.Delimiter:=';';
+        List.DelimitedText:=Place_Query3.FieldByName('place').AsString;
+
+        i:=0;
+        while i<>List2.Count do
+        begin
+          if List2.Strings[i]<>'' then
+          begin
+            if (clPlace.Items.IndexOf(List2.Strings[i])=-1) then clPlace.Items.Add(List2.Strings[i]);
+          end;
+          inc(i);
+        end;
+
+        temp:='';
+        i:=0;
+        while i<>clPlace.Count do
+        begin
+          if clPlace.Items.Strings[i]<>'' then
+          begin
+            temp:=clPlace.Items.Strings[i]+';';
+          end;
+        end;
+
+        try
+          DBGrid2.DataSource.DataSet.First;
+          while not DBGrid2.DataSource.DataSet.Eof do
+          begin
+            try
+              Place_Query.Active:=false;
+              Place_Query.SQL.Clear;
+              Place_Query.SQL.Add('insert into tblNaserver set clPlace = '''+temp+'''  where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
+              Place_Query.Active:=true;
+            except
+            end;
+            DBGrid2.DataSource.DataSet.Next;
+          end;
+        except
+        end;
+      end;
+      Place_Query3.Next;
+    end;
+  except
+  end;
+
+end;
+
 procedure TMainForm.BitBtn4Click(Sender: TObject);
 begin
   if PageControl1.ActivePage.Tag=0 then PageControl1.ActivePageIndex:=6;
@@ -2429,6 +2540,40 @@ begin
       //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
     end;
     Application.ProcessMessages;
+
+
+    try
+      Place_Query3.Active:=false;
+      Place_Query3.SQL.Clear;
+      Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
+      Place_Query3.Active:=true;
+
+      clPlace.Items.Clear;
+      Label24.Caption:='Количество на складе: ';
+      temp:=Place_Query3.FieldByName('place').AsString;
+      List:=TStringList.Create;
+      List.Duplicates:=dupIgnore;
+      List.Delimiter:=';';
+      List.DelimitedText:=temp;
+
+      i:=0;
+      while i<>List.Count do
+      begin
+        if List.Strings[i]<>'' then
+        begin
+          if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+        end;
+        inc(i);
+      end;
+
+      Label24.Caption:='Количество на складе: '+Place_Query3.FieldByName('count').AsString;
+
+    except
+
+    end;
+
+    {
+
     try
       if (Access.Connected=false) then
       begin
@@ -2471,6 +2616,7 @@ begin
       end;
     except
     end;
+
     try
       PriceSet.Active:=false;
       PriceSet.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
@@ -2478,6 +2624,9 @@ begin
     except
       //on E:Exception do ShowMessage('Ошибка 0cv2324x354342: '+E.Message);
     end;
+
+    }
+
     try
       OraPos.Active:=false;
       OraPos.SQL.Clear;
@@ -4608,7 +4757,7 @@ end;
 
 procedure TMainForm.SearchClick(Sender: TObject);
 var i,k,e, count:integer; tmp,temp:array of string; filtered:string;
-    getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string;
+    getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string; List:TStringList;
 begin
   if checkbox3.Checked=true then
   begin
@@ -5313,21 +5462,64 @@ begin
         begin
           while not OraZPC.Eof do
           begin
+
             try
-              zpc_place:='';
-              Place_Query2.Active:=false;
-              Place_Query2.SQL.Clear;
-              Place_Query2.SQL.Add('select clPlace from tblNaserver where clArticle='''+OraZPC.FieldByName('article').AsString+'''');
-              Place_Query2.Active:=true;
-              while not Place_Query2.Eof do
-              begin
-                zpc_place:=zpc_place+Place_Query2.FieldByName('clPlace').AsString+';';
-                Place_Query2.Next;
-              end;
-              zpc_place:=copy(zpc_place, 1, length(zpc_place)-1);
+              BarcodeSet.Active:=false;
+              BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+OraZPC.FieldByName('article').AsString+'''';
+              BarcodeSet.Active:=true;
             except
-              On E:Exception do ShowMessage('Ошибка [2]: '+E.Message);
+              //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
             end;
+
+            Application.ProcessMessages;
+            try
+              if (Access.Connected=false) then
+              begin
+                Access.Connected:=true;
+              end;
+              if (Access.Connected) then
+              begin
+                clPlace.Items.Clear;
+                zpc_place:='';
+                DBGrid2.DataSource.DataSet.First;
+                while not DBGrid2.DataSource.DataSet.Eof do
+                begin
+                  Place_Query.Active:=false;
+                  Place_Query.SQL.Clear;
+                  Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
+                  Place_Query.Active:=true;
+                  Place_Query.First;
+                  while not Place_Query.Eof do
+                  begin
+                    zpc_place:=zpc_place+Place_Query.FieldByName('clPlace').AsString+';';
+                    Place_Query.Next;
+                  end;
+                  DBGrid2.DataSource.DataSet.Next;
+                end;
+
+                List:=TStringList.Create;
+                List.Duplicates:=dupIgnore;
+                List.Delimiter:=';';
+                List.DelimitedText:=zpc_place;
+                zpc_place:='';
+                i:=0;
+                while i<>List.Count do
+                begin
+                  if List.Strings[i]<>'' then
+                  begin
+                    if (clPlace.Items.IndexOf(List.Strings[i])=-1) then
+                    begin
+                      clPlace.Items.Add(List.Strings[i]);
+                      zpc_place:=zpc_place+List.Strings[i]+';';
+                    end;
+                  end;
+                  inc(i);
+                end;
+
+              end;
+            except
+            end;
+
             try
               ZPC_Query.Active:=false;
               ZPC_Query.SQL.Clear;
