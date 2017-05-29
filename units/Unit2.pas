@@ -11,7 +11,8 @@ uses
   Vcl.Menus, Vcl.Imaging.pngimage, frxClass, frxDBSet, frxBarcode, frxGradient, frxBarcod,
   Vcl.JumpList, System.ImageList, Vcl.WinXCtrls, Vcl.Mask, Vcl.DBCtrls, Registry,
   CPortCtl, CPort, UModelTree, Vcl.OleCtrls, SHDocVw, Vcl.AppEvnts, ComObj,
-  frxPreview, ActiveX, frxDock, System.Win.ScktComp, CommCtrl;
+  frxPreview, ActiveX, frxDock, System.Win.ScktComp, CommCtrl, frxExportRTF,
+  frxExportPDF, frxExportHTML, frxExportImage, frxExportCSV;
 
 type
   TDBGridCover = class(TDBGrid);
@@ -309,6 +310,20 @@ type
     RadioButton5: TRadioButton;
     Label24: TLabel;
     BitBtn42: TBitBtn;
+    frxTIFFExport1: TfrxTIFFExport;
+    frxJPEGExport1: TfrxJPEGExport;
+    frxGIFExport1: TfrxGIFExport;
+    frxBMPExport1: TfrxBMPExport;
+    frxCSVExport1: TfrxCSVExport;
+    frxRTFExport1: TfrxRTFExport;
+    TabSheet16: TTabSheet;
+    Panel6: TPanel;
+    Panel7: TPanel;
+    ListBox2: TListBox;
+    DateTimePicker5: TDateTimePicker;
+    doc_rep: TfrxReport;
+    doc_set: TfrxDBDataset;
+    BitBtn43: TBitBtn;
     procedure FormShow(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -491,6 +506,10 @@ type
     procedure RadioButton5Click(Sender: TObject);
     procedure DBGrid1CellClick(Column: TColumn);
     procedure BitBtn42Click(Sender: TObject);
+    procedure ComPortRxChar(Sender: TObject; Count: Integer);
+    procedure DateTimePicker5Change(Sender: TObject);
+    procedure ListBox2DblClick(Sender: TObject);
+    procedure BitBtn43Click(Sender: TObject);
   private
     group:string;
     Half:byte;
@@ -1545,111 +1564,245 @@ begin
 end;
 
 procedure TMainForm.BitBtn42Click(Sender: TObject);
-var temp:string; List, List2:TStringList; i:integer;
+var temp, temp2, temp3:string; List, List2, List3:TStringList; i,j:integer; count:double; ext:boolean;
 begin
+  if (Access.Connected=false) then
+  begin
+    Access.Connected:=true;
+  end;
+  if (Access.Connected) then
+  begin
+    Place_Query.Active:=false;
+    Place_Query.SQL.Clear;
+    Place_Query.SQL.Add('select clStrihkod,clPlace,clKolish from tblNaserver where clStrihkod<>'''' and clStrihkod is not null');
+    Place_Query.Active:=true;
 
-  try
-    Place_Query3.Active:=false;
-    Place_Query3.SQL.Clear;
-    Place_Query3.SQL.Add('select article, place, count from place_sklad');
-    Place_Query3.Active:=true;
-    Place_Query3.First;
-    while not Place_Query3.Eof do
+    List:=TStringList.Create;
+    List2:=TStringList.Create;
+    List3:=TStringList.Create;
+
+    while not Place_Query.Eof do
     begin
       try
         BarcodeSet.Active:=false;
-        BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Place_Query3.FieldByName('article').AsString+'''';
+        BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and s.barcode='''+Place_Query.FieldByName('clStrihkod').AsString+'''';
         BarcodeSet.Active:=true;
       except
       end;
-      Application.ProcessMessages;
-
-      if (Access.Connected=false) then
-      begin
-        Access.Connected:=true;
+      try
+        Place_Query3.Active:=false;
+        Place_Query3.SQL.Clear;
+        Place_Query3.SQL.Add('select article,count, place from place_sklad where article='''+BarcodeSet.FieldByName('article').AsString+'''');
+        Place_Query3.Active:=true;
+      except
       end;
-
-      if (Access.Connected) then
-      begin
-        clPlace.Items.Clear;
+      try
         temp:='';
-        DBGrid2.DataSource.DataSet.First;
-        while not DBGrid2.DataSource.DataSet.Eof do
-        begin
-          Place_Query.Active:=false;
-          Place_Query.SQL.Clear;
-          Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
-          Place_Query.Active:=true;
-          Place_Query.First;
-          while not Place_Query.Eof do
-          begin
-            temp:=temp+Place_Query.FieldByName('clPlace').AsString+';';
-            Place_Query.Next;
-          end;
-          DBGrid2.DataSource.DataSet.Next;
-        end;
-
-        List:=TStringList.Create;
+        temp:=Place_Query.FieldByName('clPlace').AsString;
+        List.Clear;
         List.Duplicates:=dupIgnore;
         List.Delimiter:=';';
         List.DelimitedText:=temp;
 
-        i:=0;
-        while i<>List.Count do
+        if Place_Query3.RecordCount>0 then
         begin
-          if List.Strings[i]<>'' then
-          begin
-            if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+
+          try
+            count:=StrToFloat(Place_Query3.FieldByName('count').AsString);
+          except
+            count:=0;
           end;
-          inc(i);
-        end;
 
-        List2:=TStringList.Create;
-        List.Duplicates:=dupIgnore;
-        List.Delimiter:=';';
-        List.DelimitedText:=Place_Query3.FieldByName('place').AsString;
+          temp2:='';
+          temp2:=Place_Query3.FieldByName('place').AsString;
+          List2.Clear;
+          List2.Duplicates:=dupIgnore;
+          List2.Delimiter:=';';
+          List2.DelimitedText:=temp2;
 
-        i:=0;
-        while i<>List2.Count do
-        begin
-          if List2.Strings[i]<>'' then
+          temp3:='';
+
+          List3.Duplicates:=dupIgnore;
+          List3.Clear;
+          i:=0;
+          while i<>List.Count do
           begin
-            if (clPlace.Items.IndexOf(List2.Strings[i])=-1) then clPlace.Items.Add(List2.Strings[i]);
-          end;
-          inc(i);
-        end;
-
-        temp:='';
-        i:=0;
-        while i<>clPlace.Count do
-        begin
-          if clPlace.Items.Strings[i]<>'' then
-          begin
-            temp:=clPlace.Items.Strings[i]+';';
-          end;
-        end;
-
-        try
-          DBGrid2.DataSource.DataSet.First;
-          while not DBGrid2.DataSource.DataSet.Eof do
-          begin
-            try
-              Place_Query.Active:=false;
-              Place_Query.SQL.Clear;
-              Place_Query.SQL.Add('insert into tblNaserver set clPlace = '''+temp+'''  where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
-              Place_Query.Active:=true;
-            except
+            ext:=false;
+            j:=0;
+            while j<>List3.Count do
+            begin
+              if List3.Strings[j]=List.Strings[i] then
+              begin
+                ext:=true;
+                break;
+              end;
+              inc(j);
             end;
-            DBGrid2.DataSource.DataSet.Next;
+            if ext=false then List3.Add(List.Strings[i]);
+
+            inc(i);
           end;
-        except
+
+          i:=0;
+          while i<>List2.Count do
+          begin
+            ext:=false;
+            j:=0;
+            while j<>List3.Count do
+            begin
+              if List3.Strings[j]=List2.Strings[i] then
+              begin
+                ext:=true;
+                break;
+              end;
+              inc(j);
+            end;
+            if ext=false then List3.Add(List2.Strings[i]);
+
+            inc(i);
+          end;
+
+          i:=0;
+          while i<>List3.Count do
+          begin
+            temp3:=temp3+List3.Strings[i]+';';
+            inc(i);
+          end;
+
+          try
+            count:=count+StrToFloat(Place_Query.FieldByName('clKolish').AsString);
+          except
+          end;
+
+          Place_Query3.Active:=false;
+          Place_Query3.SQL.Clear;
+          Place_Query3.SQL.Add('update place_sklad set place='''+temp3+''', count='''+FloatToStr(count)+''' where article='''+BarcodeSet.FieldByName('article').AsString+'''');
+          Place_Query3.ExecSQL;
+
+        end
+        else
+        begin
+
+          temp3:='';
+          List3.Duplicates:=dupIgnore;
+          List3.Clear;
+          i:=0;
+          while i<>List.Count do
+          begin
+            ext:=false;
+            j:=0;
+            while j<>List3.Count do
+            begin
+              if List3.Strings[j]=List.Strings[i] then
+              begin
+                ext:=true;
+                break;
+              end;
+              inc(j);
+            end;
+            if ext=false then List3.Add(List.Strings[i]);
+
+            inc(i);
+          end;
+
+
+          i:=0;
+          while i<>List3.Count do
+          begin
+            temp3:=temp3+List3.Strings[i]+';';
+            inc(i);
+          end;
+
+          try
+            count:=StrToFloat(Place_Query.FieldByName('clKolish').AsString);
+          except
+            count:=0;
+          end;
+
+          Place_Query3.Active:=false;
+          Place_Query3.SQL.Clear;
+          Place_Query3.SQL.Add('insert into place_sklad(article, barcode, count, place) values('''+BarcodeSet.FieldByName('article').AsString+''','''+Place_Query.FieldByName('clStrihkod').AsString+''','''+FloatToStr(count)+''','''+temp3+''')');
+          Place_Query3.ExecSQL;
+
         end;
+      except
       end;
-      Place_Query3.Next;
+
+      Place_Query.Next;
     end;
-  except
+
   end;
 
+end;
+
+procedure TMainForm.BitBtn43Click(Sender: TObject);
+var OpenDialogImport:TOpenDialog;
+    F:TextFile; txt:string;
+    i:integer;  article:AnsiString;
+begin
+  try
+    OpenDialogImport:=TOpenDialog.Create(self);
+    OpenDialogImport.Title:='Импорт файла: ';
+    OpenDialogImport.Filter:='Dat File| *.dat';
+    if OpenDialogImport.Execute then
+    begin
+      Screen.Cursor := crAppStart;
+      LoadData.ProgressBar1.Position:=0;
+      LoadData.ProgressBar1.Min:=0;
+      AssignFile(F, OpenDialogImport.FileName);
+      Reset(F);
+      while not EOF(F) do
+      begin
+        readln(f, txt);
+        if copy(txt, 1, 7)<>'' then
+        begin
+          article:=article+#39+copy(txt, 1, 7)+#39+', ';
+        end;
+      end;
+      if article='' then
+      begin
+        ShowMessage('Ошибка: Файл пуст, пожалуйста загрузите другой файл!');
+        Exit;
+      end;
+      article:='article in ('+copy(article, 1, length(article)-2)+')';
+      try
+        TreeSet.Active:=false;
+        TreeSet.CommandText:='select d.article, d.name, d.mesabbrev as mesname, d.country, DECODE(accepted, ''1'', ''Активна'', ''2'', ''Исключена'', ''Новая'') as accepted, ';
+        TreeSet.CommandText:=TreeSet.CommandText+'DECODE(datatype, ''0'', ''Товар'', ''1'', ''Услуга'', ''2'', ''Деньги'', ''3'', ''Тара'', ''4'', ''Инвентарь'', ''5'', ''Набор'', ''#Н/Д'') as datatype, s.tree, s.name as gname from supermag.smcard d, supermag.sacardclass s WHERE s.id = d.idclass and accepted=1 and '+article;
+        TreeSet.Active:=true;
+      except
+        //on E:Exception do ShowMessage(E.Message);
+      end;
+      DBGrid1.Enabled:=true;
+      GridSelectAll(DBGrid1);
+      i:=0;
+      try
+        while i<=DBGrid1.SelectedRows.Count do
+        begin
+          DBGrid1.DataSource.DataSet.GotoBookmark(Pointer(DBGrid1.SelectedRows.Items[i]));
+          try
+            BarcodeSet.Active:=false;
+            BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+            BarcodeSet.Active:=true;
+          except
+          end;
+          DBGrid1.OnDblClick(nil);
+          inc(i);
+        end;
+      except
+      end;
+      Screen.Cursor := crDefault;
+      CloseFile(F);
+      TreeView.OnChange(nil,MainForm.TreeView.Items.GetFirstNode);
+    end
+    else
+    begin
+      OpenDialogImport.Free;
+      Exit;
+    end;
+  except
+    on E:Exception do ShowMessage('Импорт данных не был завершен!'+#13+'Ошибка: '+E.Message+'.');
+  end;
 end;
 
 procedure TMainForm.BitBtn4Click(Sender: TObject);
@@ -1799,7 +1952,7 @@ end;
 procedure TMainForm.BitBtn7Click(Sender: TObject);
 var OpenD:TOpenDialog; Excel:Variant; i,j,k:integer; article:AnsiString; action_price, action_def:string;
     action_def_r, action_def_k:string; FormatList: TStringList; CatCheck:TStringList;
-    mj, mk:boolean; name:string; price_dr, price_dk: string;
+    mj, mk:boolean; name:string; price_dr, price_dk, star_r, star_k, mk_r, mk_k: string;
 begin
   OpenD:=TOpenDialog.Create(nil);
   OpenD.Title:='Загрузка Excel файла:';
@@ -1910,6 +2063,10 @@ begin
           action_def:='';
           action_def_r:='';
           action_def_k:='';
+          star_r:='';
+          star_k:='';
+          mk_r:='';
+          mk_k:='';
           //
 
           try
@@ -1927,6 +2084,30 @@ begin
               //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
             except
             end;
+
+            action_def:=Excel.Cells[i,18].Text;
+            try
+              star_r:=GetRub(SetPoint(action_def));
+            except
+            end;
+            try
+              star_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+
+            action_def:=Excel.Cells[i,26].Text;
+            try
+              mk_r:=GetRub(SetPoint(action_def));
+            except
+            end;
+            try
+              mk_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+
+
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
             try
               TreeSet.Active:=false;
@@ -1956,7 +2137,7 @@ begin
             try
               CheckQuery.Active:=false;
               CheckQuery.SQL.Clear;
-              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''' where article='''+Excel.Cells[i,14].Text+'''');
+              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''', price_mk_r='''+mk_r+''', price_mk_k='''+mk_k+''', price_up_r='''+action_def_r+''', price_up_k='''+action_def_k+''', price_sh_r='''+star_r+''', price_sh_k='''+star_k+''' where article='''+Excel.Cells[i,14].Text+'''');
               CheckQuery.ExecSQL;
             except
             end;
@@ -1972,6 +2153,10 @@ begin
           action_def:='';
           action_def_r:='';
           action_def_k:='';
+          star_r:='';
+          star_k:='';
+          mk_r:='';
+          mk_k:='';
           //
 
           try
@@ -1997,6 +2182,29 @@ begin
               price_dk:=GetCop(SetPoint(action_def));
             except
             end;
+
+            action_def:=Excel.Cells[i,18].Text;
+            try
+              star_r:=GetRub(SetPoint(action_def));
+            except
+            end;
+            try
+              star_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+
+            action_def:=Excel.Cells[i,26].Text;
+            try
+              mk_r:=GetRub(SetPoint(action_def));
+            except
+            end;
+            try
+              mk_k:=GetCop(SetPoint(action_def));
+              //FloatToStr(Trunc(Frac(StrToFloat(SetPoint(action_def)))*100));
+            except
+            end;
+
             if length(action_def_k)=1 then action_def_k:=action_def_k+'0';
             if length(price_dk)=1 then price_dk:=price_dk+'0';
             try
@@ -2018,7 +2226,7 @@ begin
             try
               CheckQuery.Active:=false;
               CheckQuery.SQL.Clear;
-              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''' where article='''+Excel.Cells[i,14].Text+'''');
+              CheckQuery.SQL.Add('update `info_check` set memo='''+DateToStr(PrintForm.DTP.Date)+''', name='''+name+''', price_dr='''+action_def_r+''', price_dk='''+action_def_k+''', action_price_r='''+action_price+''', action_def_k='''+price_dk+''', action_def_r='''+price_dr+''', price_mk_r='''+mk_r+''', price_mk_k='''+mk_k+''', price_up_r='''+action_def_r+''', price_up_k='''+action_def_k+''', price_sh_r='''+star_r+''', price_sh_k='''+star_k+''' where article='''+Excel.Cells[i,14].Text+'''');
               CheckQuery.ExecSQL;
             except
             end;
@@ -2305,17 +2513,21 @@ end;
 function TMainForm.ClearField(value: string): string;
 var i:integer; temp:string;
 begin
-  temp:='';
-  i:=1;
-  while i<=length(value) do
-  begin
-    if ((copy(value, i, 1)<>' ') and (copy(value, i, 1)<>'З') and (copy(value, i, 1)<>'П') and (copy(value, i, 1)<>'Ц'))  then
+  try
+    temp:='';
+    i:=1;
+    while i<=length(value) do
     begin
-      temp:=temp+copy(value, i, 1);
+      if ((copy(value, i, 1)<>' ') and (copy(value, i, 1)<>'З') and (copy(value, i, 1)<>'П') and (copy(value, i, 1)<>'Ц'))  then
+      begin
+        temp:=temp+copy(value, i, 1);
+      end;
+      inc(i);
     end;
-    inc(i);
+    result:=temp;
+  except
+    result:=value;
   end;
-  result:=temp;
 end;
 
 function TMainForm.ClearSQL(value: string): string;
@@ -2444,13 +2656,37 @@ begin
   key:=#0;
 end;
 
+procedure TMainForm.ComPortRxChar(Sender: TObject; Count: Integer);
+var str:string;
+begin
+  {
+  Comport.ReadStr(str, Count);
+  if CheckBox2.Checked then
+  begin
+    FindEdit.Enabled:=true;
+    FindEdit.Text:=str;
+    Search.Click;
+  end
+  else
+  begin
+    FindEdit.Enabled:=true;
+    FindEdit.Text:=FindEdit.Text+' '+str;
+    FindEdit.SelStart:=Length(FindEdit.Text);
+  end;
+  }
+end;
+
 procedure TMainForm.ComTerminalStrRecieved(Sender: TObject; var Str: string);
 var s:string;
 begin
+
+  FindEdit.Enabled:=true;
   if half=0 then Half_S:='';
   inc(half);
   Half_S:=Half_S+Str;
-  if CheckBox2.Checked=false then
+  if CheckBox2.
+
+  Checked=false then
   begin
     CheckBox1.Checked:=true;
     if half=2 then
@@ -2471,6 +2707,7 @@ begin
     end;
   end;
   if half=2 then half:=0;
+
 end;
 
 procedure TMainForm.createzvClick(Sender: TObject);
@@ -2527,78 +2764,61 @@ begin
   Changer.Click;
 end;
 
-procedure TMainForm.DBEdit1Change(Sender: TObject);
-var goods:string; i,k,e:integer; DataSetGood:string; temp:string;  List:TStringList;
+procedure TMainForm.DateTimePicker5Change(Sender: TObject);
+var dir:string; SR: TSearchRec;
 begin
-  if TreeSet.FieldByName('article').AsString<>'' then
+  if Auth.ServerDB.Text = 'MILE_MINSK' then
   begin
-    try
-      BarcodeSet.Active:=false;
-      BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
-      BarcodeSet.Active:=true;
-    except
-      //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
+    ListBox2.Items.Clear;
+    dir:='\\dt-sh\Obmen\priemka\DCT\xml\backup\';
+    if DirectoryExists(dir+'\'+DateToStr(DateTimePicker5.DateTime)+'\') then
+    begin
+      if FindFirst(dir+'\'+DateToStr(DateTimePicker5.DateTime)+'\*.xml',faAnyFile,SR) = 0 then
+      repeat
+        ListBox2.Items.Add(SR.Name);
+      until FindNext(SR) <> 0;
+      FindClose(SR);
     end;
-    Application.ProcessMessages;
+  end;
+end;
 
+procedure TMainForm.DBEdit1Change(Sender: TObject);
+var goods:string; i,k,e,j:integer; DataSetGood:string; temp:string;  List:TStringList;
+    ext:boolean;
+begin
 
-    try
-      Place_Query3.Active:=false;
-      Place_Query3.SQL.Clear;
-      Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
-      Place_Query3.Active:=true;
-
-      clPlace.Items.Clear;
-      Label24.Caption:='Количество на складе: ';
-      temp:=Place_Query3.FieldByName('place').AsString;
-      List:=TStringList.Create;
-      List.Duplicates:=dupIgnore;
-      List.Delimiter:=';';
-      List.DelimitedText:=temp;
-
-      i:=0;
-      while i<>List.Count do
+    if TreeSet.FieldByName('article').AsString<>'' then
+    begin
+      if (PageControl1.ActivePageIndex = 4) then
       begin
-        if List.Strings[i]<>'' then
-        begin
-          if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+        try
+          BarcodeSet.Active:=false;
+          BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+          BarcodeSet.Active:=true;
+        except
+          //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
         end;
-        inc(i);
       end;
+      //Application.ProcessMessages;
 
-      Label24.Caption:='Количество на складе: '+Place_Query3.FieldByName('count').AsString;
-
-    except
-
-    end;
-
-    {
-
-    try
-      if (Access.Connected=false) then
+      if (PageControl1.ActivePageIndex = 0) then
       begin
-        Access.Connected:=true;
-      end;
-      if (Access.Connected) then
-      begin
+        try
+          BarcodeSet.Active:=false;
+          BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+          BarcodeSet.Active:=true;
+        except
+          //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
+        end;
+
+        Place_Query3.Active:=false;
+        Place_Query3.SQL.Clear;
+        Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
+        Place_Query3.Active:=true;
+
         clPlace.Items.Clear;
-        temp:='';
-        DBGrid2.DataSource.DataSet.First;
-        while not DBGrid2.DataSource.DataSet.Eof do
-        begin
-          Place_Query.Active:=false;
-          Place_Query.SQL.Clear;
-          Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
-          Place_Query.Active:=true;
-          Place_Query.First;
-          while not Place_Query.Eof do
-          begin
-            temp:=temp+Place_Query.FieldByName('clPlace').AsString+';';
-            Place_Query.Next;
-          end;
-          DBGrid2.DataSource.DataSet.Next;
-        end;
-
+        Label24.Caption:='Количество на складе: ';
+        temp:=Place_Query3.FieldByName('place').AsString;
         List:=TStringList.Create;
         List.Duplicates:=dupIgnore;
         List.Delimiter:=';';
@@ -2609,98 +2829,162 @@ begin
         begin
           if List.Strings[i]<>'' then
           begin
-            if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+            j:=0;
+            ext:=false;
+            while j<>clPlace.Items.Count do
+            begin
+              if clPlace.Items.Strings[j] = List.Strings[i] then
+              begin
+                ext:=true;
+                break;
+              end;
+              inc(j);
+            end;
+            if ext=false then clPlace.Items.Add(List.Strings[i]);
           end;
           inc(i);
         end;
-      end;
-    except
-    end;
 
-    try
-      PriceSet.Active:=false;
-      PriceSet.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
-      PriceSet.Active:=true;
-    except
-      //on E:Exception do ShowMessage('Ошибка 0cv2324x354342: '+E.Message);
-    end;
+        Label24.Caption:='Количество на складе: '+Place_Query3.FieldByName('count').AsString;
 
-    }
-
-    try
-      OraPos.Active:=false;
-      OraPos.SQL.Clear;
-      OraPos.SQL.Add('select u.name from smspec d, smdocuments p, supermag.smclientinfo u where d.article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and p.id = d.docid(+) and u.id = p.clientindex and d.doctype = ''WI'' and u.name not in (''АстомСтрой ООО '', ''Покупатель'') group by u.name');
-      OraPos.Active:=true;
-      OraPos.First;
-      ListBox1.Items.Clear;
-      while not OraPos.Eof do
+      end
+      else
       begin
-        ListBox1.Items.Add(OraPos.FieldByName('name').AsString);
-        OraPos.Next;
-      end;
-    except
-    end;
 
-    try
-      k:=0;
-      goods:='';
-      while k<>length(Auth.GList) do
+      end;
+
+
+
+
+
+        {
+        try
+
+
+          clPlace.Items.Clear;
+          Label24.Caption:='Количество на складе: ';
+          temp:=Place_Query3.FieldByName('place').AsString;
+          List:=TStringList.Create;
+          List.Duplicates:=dupIgnore;
+          List.Delimiter:=';';
+          List.DelimitedText:=temp;
+
+          i:=0;
+          while i<>List.Count do
+          begin
+            if List.Strings[i]<>'' then
+            begin
+              if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+            end;
+            inc(i);
+          end;
+
+
+
+        except
+
+        end;
+      end;
+      {
+
+
+
+      try
+        PriceSet.Active:=false;
+        PriceSet.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+        PriceSet.Active:=true;
+      except
+        //on E:Exception do ShowMessage('Ошибка 0cv2324x354342: '+E.Message);
+      end;
+
+      }
+
+      try
+        PriceSet.Active:=false;
+        PriceSet.CommandText:='select * from smprices where storeloc='+Auth.storeloc+' and pricetype='+Auth.pricetype+' and article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+        PriceSet.Active:=true;
+      except
+      end;
+
+      if ((PageControl1.ActivePageIndex = 2)  or (PageControl1.ActivePageIndex = 0)) then
       begin
-        goods:=goods+Auth.GList[k].num+' ,';
-        inc(k);
+        try
+          OraPos.Active:=false;
+          OraPos.SQL.Clear;
+          OraPos.SQL.Add('select u.name from smspec d, smdocuments p, supermag.smclientinfo u where d.article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and p.id = d.docid(+) and u.id = p.clientindex and d.doctype = ''WI'' and u.name not in (''АстомСтрой ООО '', ''Покупатель'') group by u.name');
+          OraPos.Active:=true;
+          OraPos.First;
+          ListBox1.Items.Clear;
+          while not OraPos.Eof do
+          begin
+            ListBox1.Items.Add(OraPos.FieldByName('name').AsString);
+            OraPos.Next;
+          end;
+        except
+        end;
+
+        try
+          k:=0;
+          goods:='';
+          while k<>length(Auth.GList) do
+          begin
+            goods:=goods+Auth.GList[k].num+' ,';
+            inc(k);
+          end;
+          goods:=copy(goods, 1, length(goods)-2);
+        except
+        end;
+
+
+
+
+        try
+
+          GoodSet.Active:=false;
+          GoodSet.CommandText:='select g.article, ';
+          GoodSet.CommandText:=GoodSet.CommandText+'decode(g.storeloc, ''2'', ''Маг. "Новоселкин", Минский р-н, пос. Боровая,1, 223053'', ''8'', ''Маг. "Mile", г.Минск, Долгиновский тракт,188, 220053'', ''11'', ''Маг. "Mile", г.Брест, ул. Карьерная, 9Б, 224022'',';
+          GoodSet.CommandText:=GoodSet.CommandText+' ''16'', ''Маг. "Mile", г.Могилев, Минское Шоссе,31, 212039'', ''18'', ''Маг. "Mile", г.Минск, пр-т Партизанский, 150А'',';
+          GoodSet.CommandText:=GoodSet.CommandText+' ''10'', ''Склад "Mile" Долгиновский, 220053 г.Минск, Долгиновский тракт, 188'', ''14'',';
+          GoodSet.CommandText:=GoodSet.CommandText+' ''Логистический центр "Mile", 220113 г.Минск, ул. Лукьяновича, 10'', ''15'', ''Астомстрой ЖД'', ''17'', ''Склад возврата и брака "Логистический центр", ул. Лукьяновича, 10'', ''-'') as storeloc';
+          GoodSet.CommandText:=GoodSet.CommandText+' , g.quantity, g.RESERVEDQUANTITY, g.INCOMINGQUANTITY, g.AWAITEDQUANTITY, g.FOUNDQUANTITY, sog.opersale from smgoods g, ';
+          GoodSet.CommandText:=GoodSet.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
+          GoodSet.Active:=true;
+
+            GoodSet.Active:=false;
+            //ShowMessage(Auth.storeloc2);
+            DataSetGood:= ' SELECT *'
+                  + ' FROM Supermag.SMGoods d, Supermag.SMStorelocations c, Supermag.SMOperGoods s'
+                  + ' where (d.article= '+ DBGrid1.DataSource.DataSet.FieldByName('article').AsString + ') and (c.ID = d.STORELOC) and (d.article=s.article(+)) and (s.LOCID(+) = d.STORELOC) and d.STORELOC in ('+Auth.storeloc2+')';
+
+            GoodSet.CommandText:=' SELECT name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY,CAST(sum(SALEQUANTITY - RETURNQUANTITY) as FLOAT) as opersale, CAST((max(quantity)-sum(SALEQUANTITY - RETURNQUANTITY)-reservedquantity) as FLOAT) as operquant'
+                  + ' FROM (' + DataSetGood + ')'
+                  + ' GROUP BY name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY';
+            GoodSet.Active:=true;
+
+            //ShowMessage(GoodSet.CommandText);
+        except
+          //on E:Exception do Showmessage(e.Message);
+        end;
       end;
-      goods:=copy(goods, 1, length(goods)-2);
-    except
+
+      if (PageControl1.ActivePageIndex = 1) then
+      begin
+        try
+          PropSet.Active:=false;
+          PropSet.CommandText:='select s.article, decode(s.propid, ''52'', ''Утвержденный ассортимент Mile'', ''48'', ''Акции Mile Долгиновский'', ''51'', ''Акции Новоселкин Боровая'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''49'', ''Акции Брест'', ''50'', ''Акции Могилев'', ''39'',''Собственный импорт'', ''32'', ''Аксессуары'', ''Sys.Annotation'', ''Аннотация'', ''1'', ''Вес БРУТТО (кг)'', ''0'', ''Вес НЕТТО (кг)'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''3'',''Вид тары'', ''User.Gosreg'', ''Госрегулирование'', ''37'', ''A. Маячковый/Акционный'', ''26'',''Длина'', ''13'', ''Дополнительно'', ''25'', ''Емкость'', ''18'',''Заземление'',''27'',''Замок'', ''4'', ''Кол-во в таре'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''34'', ''Комплектация'', ''28'', ''Лампа'', ''21'', ''Материал'', ''16'',''Мощность'', ''17'',''Нагрузка'', ''15'',''Назначение'', ''33'',''Объем'', ''2'',''Объем (м3)'', ''8'',''Отдел'', ''31'', ''Площадь'',''6'',''Посуда'', ''12'', ''Преимущества'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''9'',''Применение'', ''20'',''Проводник'', ''14'', ''Размер'', ''10'', ''Расход'', ''Sys.RegionProducer'',''Регион производства'', ''24'', ''Свет'', ''7'', ''Сертификаты'', ''19'', ''Сечение'', ''Sys.Composition'', ''Состав'', ''User.IsSpecialGood'', ''Спецтовар'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''38'',''Старая цена'', ''22'', ''Тип'', ''36'', ''Толщина'', ''Sys.BrandName'', ''Торговая марка'', ''40'' ,''Участник матрицы ассортимента'', ''11'', ''Цвета'', ''23'', ''Цоколь'', ''35'', ''Шаг'', ''30'', ''Энергопотребление'', ''User.Import_Article'', ''Импорт: Артикул в старой базе'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''User.Import_Group'', ''Импорт: Группа в старой базе'', ''User.Width'', ''Габариты: Ширина, мм'', ''User.Height'', ''Габариты: Высота, мм'', ''User.Deep'', ''Габариты: Глубина, мм'', ''55'', ''Площадь, м2'', ''56'', ''Количество в упаковке, шт'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''57'', ''Акционное название'', ''58'', ''Класс'', ''59'', ''Толщина защитного слоя'',''60'', ''Срок службы'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''#Н/Д'') as propid, s.propval from supermag.smcardproperties s where s.article='''+TreeSet.FieldByName('article').AsString+''' and s.propval is not null';
+          PropSet.Active:=true;
+        except
+        end;
+      end;
     end;
-
-
-
-
-    try
-
-      GoodSet.Active:=false;
-      GoodSet.CommandText:='select g.article, ';
-      GoodSet.CommandText:=GoodSet.CommandText+'decode(g.storeloc, ''2'', ''Маг. "Новоселкин", Минский р-н, пос. Боровая,1, 223053'', ''8'', ''Маг. "Mile", г.Минск, Долгиновский тракт,188, 220053'', ''11'', ''Маг. "Mile", г.Брест, ул. Карьерная, 9Б, 224022'',';
-      GoodSet.CommandText:=GoodSet.CommandText+' ''16'', ''Маг. "Mile", г.Могилев, Минское Шоссе,31, 212039'', ''18'', ''Маг. "Mile", г.Минск, пр-т Партизанский, 150А'',';
-      GoodSet.CommandText:=GoodSet.CommandText+' ''10'', ''Склад "Mile" Долгиновский, 220053 г.Минск, Долгиновский тракт, 188'', ''14'',';
-      GoodSet.CommandText:=GoodSet.CommandText+' ''Логистический центр "Mile", 220113 г.Минск, ул. Лукьяновича, 10'', ''15'', ''Астомстрой ЖД'', ''17'', ''Склад возврата и брака "Логистический центр", ул. Лукьяновича, 10'', ''-'') as storeloc';
-      GoodSet.CommandText:=GoodSet.CommandText+' , g.quantity, g.RESERVEDQUANTITY, g.INCOMINGQUANTITY, g.AWAITEDQUANTITY, g.FOUNDQUANTITY, sog.opersale from smgoods g, ';
-      GoodSet.CommandText:=GoodSet.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
-      GoodSet.Active:=true;
-
-        GoodSet.Active:=false;
-        //ShowMessage(Auth.storeloc2);
-        DataSetGood:= ' SELECT *'
-              + ' FROM Supermag.SMGoods d, Supermag.SMStorelocations c, Supermag.SMOperGoods s'
-              + ' where (d.article= '+ DBGrid1.DataSource.DataSet.FieldByName('article').AsString + ') and (c.ID = d.STORELOC) and (d.article=s.article(+)) and (s.LOCID(+) = d.STORELOC) and d.STORELOC in ('+Auth.storeloc2+')';
-
-        GoodSet.CommandText:=' SELECT name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY,CAST(sum(SALEQUANTITY - RETURNQUANTITY) as FLOAT) as opersale, CAST((max(quantity)-sum(SALEQUANTITY - RETURNQUANTITY)-reservedquantity) as FLOAT) as operquant'
-              + ' FROM (' + DataSetGood + ')'
-              + ' GROUP BY name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY';
-        GoodSet.Active:=true;
-
-        //ShowMessage(GoodSet.CommandText);
-    except
-      //on E:Exception do Showmessage(e.Message);
-    end;
-
-    try
-      PropSet.Active:=false;
-      PropSet.CommandText:='select s.article, decode(s.propid, ''52'', ''Утвержденный ассортимент Mile'', ''48'', ''Акции Mile Долгиновский'', ''51'', ''Акции Новоселкин Боровая'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''49'', ''Акции Брест'', ''50'', ''Акции Могилев'', ''39'',''Собственный импорт'', ''32'', ''Аксессуары'', ''Sys.Annotation'', ''Аннотация'', ''1'', ''Вес БРУТТО (кг)'', ''0'', ''Вес НЕТТО (кг)'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''3'',''Вид тары'', ''User.Gosreg'', ''Госрегулирование'', ''37'', ''A. Маячковый/Акционный'', ''26'',''Длина'', ''13'', ''Дополнительно'', ''25'', ''Емкость'', ''18'',''Заземление'',''27'',''Замок'', ''4'', ''Кол-во в таре'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''34'', ''Комплектация'', ''28'', ''Лампа'', ''21'', ''Материал'', ''16'',''Мощность'', ''17'',''Нагрузка'', ''15'',''Назначение'', ''33'',''Объем'', ''2'',''Объем (м3)'', ''8'',''Отдел'', ''31'', ''Площадь'',''6'',''Посуда'', ''12'', ''Преимущества'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''9'',''Применение'', ''20'',''Проводник'', ''14'', ''Размер'', ''10'', ''Расход'', ''Sys.RegionProducer'',''Регион производства'', ''24'', ''Свет'', ''7'', ''Сертификаты'', ''19'', ''Сечение'', ''Sys.Composition'', ''Состав'', ''User.IsSpecialGood'', ''Спецтовар'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''38'',''Старая цена'', ''22'', ''Тип'', ''36'', ''Толщина'', ''Sys.BrandName'', ''Торговая марка'', ''40'' ,''Участник матрицы ассортимента'', ''11'', ''Цвета'', ''23'', ''Цоколь'', ''35'', ''Шаг'', ''30'', ''Энергопотребление'', ''User.Import_Article'', ''Импорт: Артикул в старой базе'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''User.Import_Group'', ''Импорт: Группа в старой базе'', ''User.Width'', ''Габариты: Ширина, мм'', ''User.Height'', ''Габариты: Высота, мм'', ''User.Deep'', ''Габариты: Глубина, мм'', ''55'', ''Площадь, м2'', ''56'', ''Количество в упаковке, шт'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''57'', ''Акционное название'', ''58'', ''Класс'', ''59'', ''Толщина защитного слоя'',''60'', ''Срок службы'', ';
-      PropSet.CommandText:=PropSet.CommandText+'''#Н/Д'') as propid, s.propval from supermag.smcardproperties s where s.article='''+TreeSet.FieldByName('article').AsString+''' and s.propval is not null';
-      PropSet.Active:=true;
-    except
-    end;
-
-  end;
 end;
 
 procedure TMainForm.DBGrid1CellClick(Column: TColumn);
@@ -3946,6 +4230,7 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 var i:integer;
 begin
+  DateTimePicker5.DateTime:=Now;
   TreeView.Color := clRed;
   TreeView.BorderStyle := bsNone;
   //chatbit.Click;
@@ -4265,6 +4550,172 @@ begin
   MainForm.Hide;
 end;
 
+procedure TMainForm.ListBox2DblClick(Sender: TObject);
+type
+    TDataXML = Record
+      id:string;
+      id_doc:string;
+      numb:string;
+      name:string;
+      count_e:string;
+      barcode:string;
+      article:string;
+      place:string;
+      price:string;
+    end;
+var dir:string; F:TextFile; str:string; i,k:integer; DataXML:array of TDataXML; fname:string; List:TStringList; who_get, who_set, tdoc, ndoc:string;
+begin
+  if ListBox2.ItemIndex<>-1 then
+  begin
+    if Auth.ServerDB.Text = 'MILE_MINSK' then
+    begin
+      who_get:='';
+      who_set:='';
+      dir:='\\dt-sh\Obmen\priemka\DCT\xml\backup\'+DateToStr(DateTimePicker5.DateTime)+'\'+ListBox2.Items.Strings[ListBox2.ItemIndex];
+      try
+        fname:=ListBox2.Items.Strings[ListBox2.ItemIndex];
+        List:=TStringList.Create;
+        List.Delimiter:='[';
+        List.StrictDelimiter := True;
+        List.DelimitedText:=fname;
+        fname:=List.Strings[1];
+        List.Clear;
+        List.StrictDelimiter := False;
+        List.Delimiter:=']';
+        List.StrictDelimiter := True;
+        List.DelimitedText:=fname;
+        fname:=List.Strings[0];
+        List.Clear;
+        List.StrictDelimiter := False;
+        List.Delimiter:='_';
+        List.StrictDelimiter := True;
+        List.DelimitedText:=fname;
+        who_get:=List.Strings[0];
+        who_set:=List.Strings[1];
+        List.Clear;
+        List.StrictDelimiter:=false;
+        fname:=ListBox2.Items.Strings[ListBox2.ItemIndex];
+        List.Delimiter:='_';
+        List.StrictDelimiter:=true;
+        List.DelimitedText:=fname;
+        tdoc:=List.Strings[0];
+        ndoc:=List.Strings[2];
+        List.Clear;
+      except
+      end;
+      if FileExists(dir) then
+      begin
+        AssignFile(f, dir);
+        Reset(f);
+        ReadLn(f, str);
+        ReadLn(f, str);
+        i:=0;
+        k:=0;
+        SetLength(DataXML, 0);
+        while not EOF(f) do
+        begin
+          if i=0 then
+          begin
+            SetLength(DataXML, k+1);
+            ReadLn(f, str);
+            DataXML[k].id:=Utf8ToAnsi(str);
+          end;
+          if i=1 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].id_doc:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=2 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].numb:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=3 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].name:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=4 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].count_e:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=5 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].barcode:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=6 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].article:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=7 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].place:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+          end;
+          if i=8 then
+          begin
+            ReadLn(f, str);
+            DataXML[k].price:=StringReplace(StringReplace(Utf8ToAnsi(str), '<string>', '', [rfReplaceAll, rfIgnoreCase]), '</string>', '', [rfReplaceAll, rfIgnoreCase]);
+            i:=-1;
+            inc(k);
+          end;
+
+          inc(i);
+        end;
+        CloseFile(f);
+      end;
+
+      try
+        Place_Query3.Active:=false;
+        Place_Query3.SQL.Clear;
+        Place_Query3.SQL.Add('delete from txt_sklad where group_id='''+Auth.groupid+'''');
+        Place_Query3.ExecSQL;
+      except
+      end;
+
+      try
+        i:=0;
+        while i<Length(DataXML) do
+        begin
+          if DataXML[i].name = '' then break;
+          try
+            Place_Query3.Active:=false;
+            Place_Query3.SQL.Clear;
+            Place_Query3.SQL.Add('insert into txt_sklad(article, name, count, barcode, group_id, who_get, who_set, tdoc, ndoc) values('''+DataXML[i].article+''', "'+mainform.nobadchar(DataXML[i].name)+'", '''+DataXML[i].count_e+''', '''+DataXML[i].barcode+''', '''+Auth.groupid+''', '''+who_get+''', '''+who_set+''', '''+tdoc+''', '''+ndoc+''')');
+            Place_Query3.ExecSQL;
+          except
+          end;
+          inc(i);
+        end;
+      except
+        //On E:Exception do ShowMessage(E.Message);
+      end;
+
+      try
+        Place_Query3.Active:=false;
+        Place_Query3.SQL.Clear;
+        Place_Query3.SQL.Add('select * from txt_sklad where group_id='''+Auth.groupid+'''');
+        Place_Query3.Active:=true;
+      except
+      end;
+
+      try
+        dir:=ExtractFilePath(ParamStr(0));
+        doc_rep.LoadFromFile(dir+'FR\doclist.fr3');
+        doc_rep.PrintOptions.ShowDialog:=true;
+        doc_rep.PrepareReport(true);
+        doc_rep.ShowPreparedReport;
+        doc_rep.Clear;
+      except
+      end;
+
+    end;
+  end;
+end;
+
 procedure TMainForm.LoadReg;
 var
   Registry: TRegistry;
@@ -4306,8 +4757,11 @@ begin
   temp:=StringReplace(value, #34, #92+#34, [rfReplaceAll, rfIgnoreCase]);
   temp:=StringReplace(value, #39, #92+#39, [rfReplaceAll, rfIgnoreCase]);
   temp:=StringReplace(value, #47, #92+#47, [rfReplaceAll, rfIgnoreCase]);
+  temp:=StringReplace(value, '"', #92+'"', [rfReplaceAll, rfIgnoreCase]);
+
   result:=temp;
 end;
+
 
 procedure TMainForm.ObrabTimer(Sender: TObject);
 var i:integer; top:integer; post:integer;
@@ -4363,14 +4817,147 @@ begin
 end;
 
 procedure TMainForm.PageControl1Change(Sender: TObject);
+var temp, DataSetGood, goods:string; List:TStringList; i,k,e:integer;
 begin
+  if (PageControl1.ActivePageIndex = 16) then
+  begin
+    DateTimePicker5.OnChange(sender);
+  end;
+
+  if ((PageControl1.ActivePageIndex = 0) or (PageControl1.ActivePageIndex = 2)) then
+  begin
+    try
+      Place_Query3.Active:=false;
+      Place_Query3.SQL.Clear;
+      Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
+      Place_Query3.Active:=true;
+
+      clPlace.Items.Clear;
+      Label24.Caption:='Количество на складе: ';
+      temp:=Place_Query3.FieldByName('place').AsString;
+      List:=TStringList.Create;
+      List.Duplicates:=dupIgnore;
+      List.Delimiter:=';';
+      List.DelimitedText:=temp;
+
+      i:=0;
+      while i<>List.Count do
+      begin
+        if List.Strings[i]<>'' then
+        begin
+          if (clPlace.Items.IndexOf(List.Strings[i])=-1) then clPlace.Items.Add(List.Strings[i]);
+        end;
+        inc(i);
+      end;
+
+      Label24.Caption:='Количество на складе: '+Place_Query3.FieldByName('count').AsString;
+
+    except
+
+    end;
+
+    //
+
+    try
+      OraPos.Active:=false;
+      OraPos.SQL.Clear;
+      OraPos.SQL.Add('select u.name from smspec d, smdocuments p, supermag.smclientinfo u where d.article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and p.id = d.docid(+) and u.id = p.clientindex and d.doctype = ''WI'' and u.name not in (''АстомСтрой ООО '', ''Покупатель'') group by u.name');
+      OraPos.Active:=true;
+      OraPos.First;
+      ListBox1.Items.Clear;
+      while not OraPos.Eof do
+      begin
+        ListBox1.Items.Add(OraPos.FieldByName('name').AsString);
+        OraPos.Next;
+      end;
+    except
+    end;
+
+    try
+      k:=0;
+      goods:='';
+      while k<>length(Auth.GList) do
+      begin
+        goods:=goods+Auth.GList[k].num+' ,';
+        inc(k);
+      end;
+      goods:=copy(goods, 1, length(goods)-2);
+    except
+    end;
+
+    try
+      GoodSet.Active:=false;
+      GoodSet.CommandText:='select g.article, ';
+      GoodSet.CommandText:=GoodSet.CommandText+'decode(g.storeloc, ''2'', ''Маг. "Новоселкин", Минский р-н, пос. Боровая,1, 223053'', ''8'', ''Маг. "Mile", г.Минск, Долгиновский тракт,188, 220053'', ''11'', ''Маг. "Mile", г.Брест, ул. Карьерная, 9Б, 224022'',';
+      GoodSet.CommandText:=GoodSet.CommandText+' ''16'', ''Маг. "Mile", г.Могилев, Минское Шоссе,31, 212039'', ''18'', ''Маг. "Mile", г.Минск, пр-т Партизанский, 150А'',';
+      GoodSet.CommandText:=GoodSet.CommandText+' ''10'', ''Склад "Mile" Долгиновский, 220053 г.Минск, Долгиновский тракт, 188'', ''14'',';
+      GoodSet.CommandText:=GoodSet.CommandText+' ''Логистический центр "Mile", 220113 г.Минск, ул. Лукьяновича, 10'', ''15'', ''Астомстрой ЖД'', ''17'', ''Склад возврата и брака "Логистический центр", ул. Лукьяновича, 10'', ''-'') as storeloc';
+      GoodSet.CommandText:=GoodSet.CommandText+' , g.quantity, g.RESERVEDQUANTITY, g.INCOMINGQUANTITY, g.AWAITEDQUANTITY, g.FOUNDQUANTITY, sog.opersale from smgoods g, ';
+      GoodSet.CommandText:=GoodSet.CommandText+' (select decode(sum(og.salequantity - og.returnquantity), '''', ''0'', ''0'') as opersale, og.locid, og.article from smopergoods og where og.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and og.locid in ('+goods+') group by og.locid, og.article) sog where g.storeloc in ('+goods+') and g.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''' and g.article=sog.article(+) and g.storeloc=sog.locid(+)';
+      GoodSet.Active:=true;
+
+      GoodSet.Active:=false;
+      //ShowMessage(Auth.storeloc2);
+      DataSetGood:= ' SELECT *' + ' FROM Supermag.SMGoods d, Supermag.SMStorelocations c, Supermag.SMOperGoods s' + ' where (d.article= '+ DBGrid1.DataSource.DataSet.FieldByName('article').AsString + ') and (c.ID = d.STORELOC) and (d.article=s.article(+)) and (s.LOCID(+) = d.STORELOC) and d.STORELOC in ('+Auth.storeloc2+')';
+
+      GoodSet.CommandText:=' SELECT name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY,CAST(sum(SALEQUANTITY - RETURNQUANTITY) as FLOAT) as opersale, CAST((max(quantity)-sum(SALEQUANTITY - RETURNQUANTITY)-reservedquantity) as FLOAT) as operquant' + ' FROM (' + DataSetGood + ')' + ' GROUP BY name,QUANTITY,RESERVEDQUANTITY,INCOMINGQUANTITY,AWAITEDQUANTITY,FOUNDQUANTITY';
+      GoodSet.Active:=true;
+
+            //ShowMessage(GoodSet.CommandText);
+    except
+    end;
+
+  end;
+
+  if (PageControl1.ActivePageIndex = 1) then
+  begin
+    try
+      if TreeSet.FieldByName('article').AsString<>'' then
+      begin
+        try
+          PropSet.Active:=false;
+          PropSet.CommandText:='select s.article, decode(s.propid, ''52'', ''Утвержденный ассортимент Mile'', ''48'', ''Акции Mile Долгиновский'', ''51'', ''Акции Новоселкин Боровая'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''49'', ''Акции Брест'', ''50'', ''Акции Могилев'', ''39'',''Собственный импорт'', ''32'', ''Аксессуары'', ''Sys.Annotation'', ''Аннотация'', ''1'', ''Вес БРУТТО (кг)'', ''0'', ''Вес НЕТТО (кг)'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''3'',''Вид тары'', ''User.Gosreg'', ''Госрегулирование'', ''37'', ''A. Маячковый/Акционный'', ''26'',''Длина'', ''13'', ''Дополнительно'', ''25'', ''Емкость'', ''18'',''Заземление'',''27'',''Замок'', ''4'', ''Кол-во в таре'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''34'', ''Комплектация'', ''28'', ''Лампа'', ''21'', ''Материал'', ''16'',''Мощность'', ''17'',''Нагрузка'', ''15'',''Назначение'', ''33'',''Объем'', ''2'',''Объем (м3)'', ''8'',''Отдел'', ''31'', ''Площадь'',''6'',''Посуда'', ''12'', ''Преимущества'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''9'',''Применение'', ''20'',''Проводник'', ''14'', ''Размер'', ''10'', ''Расход'', ''Sys.RegionProducer'',''Регион производства'', ''24'', ''Свет'', ''7'', ''Сертификаты'', ''19'', ''Сечение'', ''Sys.Composition'', ''Состав'', ''User.IsSpecialGood'', ''Спецтовар'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''38'',''Старая цена'', ''22'', ''Тип'', ''36'', ''Толщина'', ''Sys.BrandName'', ''Торговая марка'', ''40'' ,''Участник матрицы ассортимента'', ''11'', ''Цвета'', ''23'', ''Цоколь'', ''35'', ''Шаг'', ''30'', ''Энергопотребление'', ''User.Import_Article'', ''Импорт: Артикул в старой базе'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''User.Import_Group'', ''Импорт: Группа в старой базе'', ''User.Width'', ''Габариты: Ширина, мм'', ''User.Height'', ''Габариты: Высота, мм'', ''User.Deep'', ''Габариты: Глубина, мм'', ''55'', ''Площадь, м2'', ''56'', ''Количество в упаковке, шт'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''57'', ''Акционное название'', ''58'', ''Класс'', ''59'', ''Толщина защитного слоя'',''60'', ''Срок службы'', ';
+          PropSet.CommandText:=PropSet.CommandText+'''#Н/Д'') as propid, s.propval from supermag.smcardproperties s where s.article='''+TreeSet.FieldByName('article').AsString+''' and s.propval is not null';
+          PropSet.Active:=true;
+        except
+        end;
+      end;
+    except
+    end;
+  end;
+
+  if (PageControl1.ActivePageIndex = 4) then
+  begin
+    try
+      if TreeSet.FieldByName('article').AsString<>'' then
+      begin
+        try
+          BarcodeSet.Active:=false;
+          BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+          BarcodeSet.Active:=true;
+        except
+        end;
+      end;
+    except
+    end;
+  end;
+
   TreeView.DragMode:=dmManual;
+
   if PageControl1.ActivePageIndex=11 then
   begin
     //TreeView.DragMode:=dmAutomatic;
     combobox3.Text:=Auth.magazin;
     bitbtn15.Click;
   end;
+
   if PageControl1.ActivePageIndex=8 then
   begin
     try
@@ -4383,6 +4970,7 @@ begin
     except
     end;
   end;
+
   if PageControl1.ActivePageIndex=14 then
   begin
     try
@@ -4390,6 +4978,7 @@ begin
     except
     end;
   end;
+
 end;
 
 procedure TMainForm.Panel25CanResize(Sender: TObject; var NewWidth,
@@ -4756,7 +5345,7 @@ begin
 end;
 
 procedure TMainForm.SearchClick(Sender: TObject);
-var i,k,e, count:integer; tmp,temp:array of string; filtered:string;
+var i,k,e,j, count:integer; tmp,temp:array of string; filtered:string; ext:boolean;
     getid, cardid, clientid, sur_name, name, patronymic:string; dir:string; tmpf:string; zpcart:string; zpc_place:string; List:TStringList;
 begin
   if checkbox3.Checked=true then
@@ -4793,25 +5382,14 @@ begin
   begin
     if f12=true then
     begin
+      FindEdit.Enabled:=true;
       Scaner.Caption:='Price Checker: ';
+      f12:=false;
       Scaner.Find(FindEdit.Text);
       Application.ProcessMessages;
       Scaner.Show;
-      Scaner.Finder.SetFocus;
-      f12:=false;
-      //FindEdit.Text:='';
-      //FindEdit.SetFocus;
-      //FindEdit.SelLength:=0;
-      //FindEdit.SelStart:=Length(FindEdit.Text);
+
       Exit;
-      {
-      else
-      begin
-        FindEdit.Text:=FindEdit.Text+' ';
-        FindEdit.SelStart:=Length(FindEdit.Text);
-        Exit;
-      end;
-      }
     end;
     if f12_ext=true then
     begin
@@ -5435,21 +6013,25 @@ begin
       end;
       }
       try
-        OraZPC.Active:=false;
-        OraZPC.SQL.Clear;
-        OraZPC.SQL.Add('select s.article, d.location, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
-        OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity, g.storeloc from smgoods g group by g.article, g.storeloc) gs, smstoreunits sb ');
-        OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
-        OraZPC.SQL.Add('and d.id = a.id ');
-        OraZPC.SQL.Add('and c.id = a.ourselfclient ');
-        OraZPC.SQL.Add('and d.location = l.id ');
-        OraZPC.SQL.Add('and gs.storeloc = d.location ');
-        OraZPC.SQL.Add('and s.docid = d.id ');
-        OraZPC.SQL.Add('and ds.article = s.article ');
-        OraZPC.SQL.Add('and sb.article = s.article ');
-        OraZPC.SQL.Add('and gs.article = s.article ');
-        OraZPC.SQL.Add('group by s.article, d.location ');
-        OraZPC.Active:=true;
+        try
+          OraZPC.Active:=false;
+          OraZPC.SQL.Clear;
+          OraZPC.SQL.Add('select s.article, d.location, max(d.id) as zpc, max(sb.barcode) as barcode, max(c.name) as getter, max(l.name) as sender, max(ds.shortname) as name, max(s.quantity) as quan, max(ds.mesname) as edism, max(gs.quantity) as ost ');
+          OraZPC.SQL.Add('FROM SMDateDocs a, smdocuments d, smclientinfo c, smstorelocations l, smspec s, smcard ds, (select g.article, sum(g.quantity) as quantity, g.storeloc from smgoods g group by g.article, g.storeloc) gs, smstoreunits sb ');
+          OraZPC.SQL.Add('where a.id = ''ЗПЦ'+FindEdit.Text+''' ');
+          OraZPC.SQL.Add('and d.id = a.id ');
+          OraZPC.SQL.Add('and c.id = a.ourselfclient ');
+          OraZPC.SQL.Add('and d.location = l.id ');
+          OraZPC.SQL.Add('and gs.storeloc = d.location ');
+          OraZPC.SQL.Add('and s.docid = d.id ');
+          OraZPC.SQL.Add('and ds.article = s.article ');
+          OraZPC.SQL.Add('and sb.article = s.article ');
+          OraZPC.SQL.Add('and gs.article = s.article ');
+          OraZPC.SQL.Add('group by s.article, d.location ');
+          OraZPC.Active:=true;
+        except
+        end;
+
         try
           ZPC_Query.Active:=false;
           ZPC_Query.SQL.Clear;
@@ -5458,6 +6040,7 @@ begin
         except
           On E:Exception do ShowMessage('Ошибка [1]: '+E.Message);
         end;
+
         if OraZPC.RecordCount>0 then
         begin
           while not OraZPC.Eof do
@@ -5475,6 +6058,7 @@ begin
             try
               if (Access.Connected=false) then
               begin
+                ShowMessage('Access not connected!');
                 Access.Connected:=true;
               end;
               if (Access.Connected) then
@@ -5484,10 +6068,14 @@ begin
                 DBGrid2.DataSource.DataSet.First;
                 while not DBGrid2.DataSource.DataSet.Eof do
                 begin
-                  Place_Query.Active:=false;
-                  Place_Query.SQL.Clear;
-                  Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
-                  Place_Query.Active:=true;
+                  try
+                    Place_Query.Active:=false;
+                    Place_Query.SQL.Clear;
+                    Place_Query.SQL.Add('select clPlace from tblNaserver where clStrihkod='''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+'''');
+                    Place_Query.Active:=true;
+                  except
+                    On E:Exception do ShowMessage('Ошибка [13]:'+E.Message);
+                  end;
                   Place_Query.First;
                   while not Place_Query.Eof do
                   begin
@@ -5496,7 +6084,7 @@ begin
                   end;
                   DBGrid2.DataSource.DataSet.Next;
                 end;
-
+                //ShowMessage(DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+#13+zpc_place);
                 List:=TStringList.Create;
                 List.Duplicates:=dupIgnore;
                 List.Delimiter:=';';
@@ -5507,11 +6095,18 @@ begin
                 begin
                   if List.Strings[i]<>'' then
                   begin
-                    if (clPlace.Items.IndexOf(List.Strings[i])=-1) then
+                    j:=0;
+                    ext:=false;
+                    while j<>clPlace.Items.Count do
                     begin
-                      clPlace.Items.Add(List.Strings[i]);
-                      zpc_place:=zpc_place+List.Strings[i]+';';
+                      if clPlace.Items.Strings[j]=List.Strings[i] then
+                      begin
+                        ext:=true;
+                        break;
+                      end;
+                      inc(j);
                     end;
+                    if ext=false then clPlace.Items.Add(List.Strings[i]);
                   end;
                   inc(i);
                 end;
@@ -5519,6 +6114,15 @@ begin
               end;
             except
             end;
+            zpc_place:='';
+            i:=0;
+            while i<>clPlace.Items.Count  do
+            begin
+              if ((clPlace.Items.Strings[i]<>'') or (clPlace.Items.Strings[i]<>' ')) then zpc_place:=zpc_place+clPlace.Items.Strings[i]+';';
+
+              inc(i);
+            end;
+
 
             try
               ZPC_Query.Active:=false;
@@ -5530,6 +6134,7 @@ begin
             end;
             OraZPC.Next;
           end;
+
           try
             ZPC_Query.Active:=false;
             ZPC_Query.SQL.Clear;
@@ -5538,6 +6143,10 @@ begin
           except
             On E:Exception do ShowMessage('Ошибка [4]: '+E.Message);
           end;
+        end
+        else
+        begin
+          Exit;
         end;
         FindEdit.SetFocus;
         FindEdit.SelLength:=0;
@@ -5549,6 +6158,7 @@ begin
           Exit;
         end;
       end;
+
       try
         dir:=ExtractFilePath(ParamStr(0));
         ZPCReport.LoadFromFile(dir+'FR\ZPC.fr3');

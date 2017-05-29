@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Math;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Math, Data.DB;
 
 type
   TEnterForm = class(TForm)
@@ -87,7 +87,7 @@ begin
             end;
             MainForm.VipQuery.Active:=false;
             MainForm.VipQuery.SQL.Clear;
-            MainForm.VipQuery.SQL.Add('insert into info_vip(groupid, article, name, barcode, count, em, price, price_d, summ, summ_d) values('''+Auth.groupid+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+MainForm.noBadChar(MainForm.DBGrid1.DataSource.DataSet.FieldByName('name').AsString)+''', '''+MainForm.DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+count+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+FloatToStr(amount)+''', '''+FloatToStr(amount_d)+''', '''+FloatToStr(amount_summ)+''', '''+FloatToStr(amount_summ_d)+''')');
+            MainForm.VipQuery.SQL.Add('insert into info_vip(groupid, article, name, barcode, count, em, price, price_d, summ, summ_d) values('''+Auth.groupid+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', "'+mainform.nobadchar(MainForm.DBGrid1.DataSource.DataSet.FieldByName('name').AsString)+'", '''+MainForm.DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+count+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+FloatToStr(amount)+''', '''+FloatToStr(amount_d)+''', '''+FloatToStr(amount_summ)+''', '''+FloatToStr(amount_summ_d)+''')');
             MainForm.VipQuery.ExecSQL;
             MainForm.VipTable.Active:=false;
             MainForm.VipTable.Active:=true;
@@ -100,7 +100,8 @@ begin
             amount_summ_d:=0;
             MainForm.VipQuery.Active:=false;
             MainForm.VipQuery.SQL.Clear;
-            MainForm.VipQuery.SQL.Add('insert into info_vip(groupid, article, name, barcode, count, em, price, price_d, summ, summ_d) values('''+Auth.groupid+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+MainForm.noBadChar(MainForm.DBGrid1.DataSource.DataSet.FieldByName('name').AsString)+''', '''+MainForm.DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+count+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+FloatToStr(amount)+''', '''+FloatToStr(amount_d)+''', '''+FloatToStr(amount_summ)+''', '''+FloatToStr(amount_summ_d)+''')');
+            MainForm.VipQuery.SQL.Add('insert into info_vip(groupid, article, name, barcode, count, em, price, price_d, summ, summ_d) values('''+Auth.groupid+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', "'+mainform.nobadchar(MainForm.DBGrid1.DataSource.DataSet.FieldByName('name').AsString)+'", '''+MainForm.DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+count+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+FloatToStr(amount)+''', '''+FloatToStr(amount_d)+''', '''+FloatToStr(amount_summ)+''', '''+FloatToStr(amount_summ_d)+''')');
+
             MainForm.VipQuery.ExecSQL;
             MainForm.VipTable.Active:=false;
             MainForm.VipTable.Active:=true;

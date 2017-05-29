@@ -2128,7 +2128,7 @@ object AD: TAD
     FFFFFFC00000000003FFFFFFFFFFFFFFFFFFFFF8000000001FFFFFFFFFFFFFFF
     FFFFFFFF80000000FFFFFFFFFFFFFFFFFFFFFFFFF800001FFFFFFFFFFFFF}
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
@@ -2138,9 +2138,10 @@ object AD: TAD
     Top = 0
     Width = 998
     Height = 602
-    ActivePage = TabSheet1
+    ActivePage = TabSheet3
     Align = alClient
     TabOrder = 0
+    OnChange = PageControlChange
     object TabSheet3: TTabSheet
       Caption = 'Info '#9824
       ImageIndex = 2
@@ -3194,6 +3195,10 @@ object AD: TAD
           end
         end
       end
+    end
+    object TabSheet6: TTabSheet
+      Caption = 'Android Base'
+      ImageIndex = 5
     end
   end
   object GroupTable: TADOTable

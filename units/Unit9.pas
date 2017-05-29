@@ -71,7 +71,6 @@ procedure TScaner.Find(barcode: string);
 var amount:Currency; goods:string; k:integer;
     DataSetGood:string;
 begin
-
   try
     k:=0;
     goods:='';

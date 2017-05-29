@@ -705,20 +705,21 @@ begin
     end;
     }
 
-
+    (*
     if (Auth.ServerDB.Text='MILE_CO') then
     begin
       try
         if Auth.Sklad then
         begin
-          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=S:\Mile_Sklad\db\InfoDataBase.mdb;Persist Security Info=True';
+          //MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=S:\Mile_Sklad\db\InfoDataBase.mdb;Persist Security Info=True';
           MainForm.Access.Connected:=true;
         end
         else
         begin
           if FileExists('\\dt-vm-1\info\InfoDataBase.mdb') then
           begin
-            MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+            MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+            //MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
             MainForm.Access.Connected:=true;
           end
           else ShowMessage('Соединение с базой данных скалада не было установлено!'+#13+'Пожалуйста сообщите об этом системному администратору!');
@@ -726,12 +727,15 @@ begin
       except
       end;
     end;
+    *)
+
     if (Auth.ServerDB.Text='MILE_MINSK') then
     begin
       try
         if FileExists('\\dt-vm-1\info\InfoDataBase.mdb') then
         begin
-          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+          MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+          //MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
           MainForm.Access.Connected:=true;
         end
         else ShowMessage('Соединение с базой данных скалада не было установлено!'+#13+'Пожалуйста сообщите об этом системному администратору!');
@@ -739,15 +743,17 @@ begin
       end;
     end;
 
-
+    (*
     if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then
     begin
       try
-        MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=s:\mile_Тимирязева\Priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
+        MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=s:\mile_Тимирязева\Priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
+        //MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=s:\mile_Тимирязева\Priemka\DB\InfoDataBase.mdb;Persist Security Info=True';
         MainForm.Access.Connected:=true;
       except
       end;
     end;
+    *)
 
     {
     if (Auth.ServerDB.Text='MILE_MOG') then

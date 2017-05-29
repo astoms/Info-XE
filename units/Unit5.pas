@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Data.DB, Data.Win.ADODB, Vcl.Grids,
   Vcl.DBGrids, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Vcl.ComCtrls, IdCoder,
-  IdCoder3to4, IdCoder00E, IdCoderXXE, IdBaseComponent, Vcl.Mask, Vcl.DBCtrls;
+  IdCoder3to4, IdCoder00E, IdCoderXXE, IdBaseComponent, Vcl.Mask, Vcl.DBCtrls, ShellAPI;
 
 type
   TAD = class(TForm)
@@ -102,6 +102,7 @@ type
     BitBtn15: TBitBtn;
     Edit5: TEdit;
     CheckBox2: TCheckBox;
+    TabSheet6: TTabSheet;
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -126,6 +127,7 @@ type
     procedure DBGrid6CellClick(Column: TColumn);
     procedure BitBtn15Click(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
+    procedure PageControlChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -606,6 +608,35 @@ end;
 procedure TAD.LabeledEdit7KeyPress(Sender: TObject; var Key: Char);
 begin
   if not (key in ['0'..'9', #8, '.']) then key:=#0;
+end;
+
+procedure TAD.PageControlChange(Sender: TObject);
+var h:hwnd; nc:Cardinal;
+begin
+  if PageControl.ActivePageIndex = 5 then
+  begin
+    h:=findwindow(nil, 'MainFrame');
+
+    if h<>0 then
+    begin
+      WinAPI.Windows.SetParent(h,TabSheet6.Handle);
+    end
+    else
+    begin
+      try
+        ShellExecute(handle,'open',Pchar('ServSklad.exe'),PChar('start'),PChar(ExtractFileDir(ParamStr(0))+'\ServSklad\'), SW_SHOW);
+        sleep(100);
+        h:=findwindow(nil, 'MainFrame');
+
+        if h<>0 then
+        begin
+          WinAPI.Windows.SetWindowPos(h, HWND_BOTTOM, 0, 0, 200, 200, SWP_NOSIZE);
+          WinAPI.Windows.SetParent(h,TabSheet6.Handle);
+        end;
+      except
+      end;
+    end;
+  end;
 end;
 
 procedure TAD.SpeedButton1Click(Sender: TObject);

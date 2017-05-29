@@ -4,8 +4,8 @@ object Auth: TAuth
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = #1040#1074#1090#1086#1088#1080#1079#1072#1094#1080#1103' '#1087#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1103
-  ClientHeight = 164
-  ClientWidth = 303
+  ClientHeight = 162
+  ClientWidth = 304
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
