@@ -19514,7 +19514,7 @@
             Margins.Top = 5
             Margins.Right = 5
             Margins.Bottom = 5
-            ActivePage = TabSheet7
+            ActivePage = TabSheet1
             Align = alClient
             Font.Charset = RUSSIAN_CHARSET
             Font.Color = clWindowText
@@ -19536,6 +19536,7 @@
               Font.Name = 'Times New Roman'
               Font.Style = []
               ParentFont = False
+              ExplicitLeft = 5
               object Label1: TLabel
                 Left = 21
                 Top = 5
@@ -19852,7 +19853,6 @@
                 Width = 59
                 Height = 25
                 Caption = '+'
-                Enabled = False
                 TabOrder = 10
                 OnClick = BitBtn39Click
               end
@@ -19862,7 +19862,6 @@
                 Width = 57
                 Height = 25
                 Caption = '-'
-                Enabled = False
                 TabOrder = 11
                 OnClick = BitBtn40Click
               end
@@ -23274,7 +23273,7 @@
                   BevelOuter = bvNone
                   Date = 42578.666853148150000000
                   Time = 42578.666853148150000000
-                  MaxDate = 43100.999988425930000000
+                  MaxDate = 43100.999988425920000000
                   MinDate = 42370.000000000000000000
                   TabOrder = 2
                   Visible = False
@@ -23854,7 +23853,7 @@
     Left = 48
     Top = 328
     Bitmap = {
-      494C01010200C400100210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200C4003C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -25980,15 +25979,10 @@
     Top = 608
   end
   object Access: TADOConnection
-    ConnectionString = 
-      'Provider=MSDASQL.1;Password=kj87dyt;Persist Security Info=True;U' +
-      'ser ID=root;Extended Properties="Driver=MySQL ODBC 5.3 Unicode D' +
-      'river;SERVER=192.168.1.242;UID=root;PWD=kj87dyt;DATABASE=info;PO' +
-      'RT=3306;DFLT_BIGINT_BIND_STR=1"'
     LoginPrompt = False
-    Provider = 'MSDASQL.1'
-    Left = 440
-    Top = 520
+    Provider = 'Microsoft.Jet.OLEDB.4.0'
+    Left = 472
+    Top = 536
   end
   object Place_Query: TADOQuery
     Connection = Access
@@ -25997,7 +25991,7 @@
     Top = 600
   end
   object Place_Query2: TADOQuery
-    Connection = Access
+    Connection = Auth.MySQLSes
     Parameters = <>
     Left = 440
     Top = 640
@@ -26014,6 +26008,7 @@
     Parameters = <
       item
         Name = 'TD'
+        Size = -1
         Value = Null
       end>
     Left = 505

@@ -373,6 +373,7 @@ begin
     end;  }
         GoToServer(ServerDB.Text);
         MainForm.Caption:=Auth.title+' '+ver+' | '+Auth.groupname;
+        //MainForm.Caption:='Информационно-торговая система Info xe';
         MainForm.TreeView.Items.Item[0].Expanded:=true;
         //MainForm.GetGroup();
         TaskBar.OverlayIcon:=nil;
@@ -711,7 +712,7 @@ begin
       try
         if Auth.Sklad then
         begin
-          //MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=S:\Mile_Sklad\db\InfoDataBase.mdb;Persist Security Info=True';
+          MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=S:\Mile_Sklad\db\InfoDataBase.mdb;Persist Security Info=True';
           MainForm.Access.Connected:=true;
         end
         else
@@ -729,12 +730,28 @@ begin
     end;
     *)
 
+    if (Auth.ServerDB.Text='MILE_CO') then
+    begin
+      try
+        if Auth.Sklad then
+        begin
+          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Data Source=\\log-sklad\obmen\db\InfoDataBase.mdb;Persist Security Info=True';
+          MainForm.Access.Connected:=true;
+        end
+        else
+        begin
+
+        end;
+      except
+      end;
+    end;
+
     if (Auth.ServerDB.Text='MILE_MINSK') then
     begin
       try
         if FileExists('\\dt-vm-1\info\InfoDataBase.mdb') then
         begin
-          MainForm.Access.ConnectionString:='Provider=Microsoft.ACE.OLEDB.15.0;Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
           //MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
           MainForm.Access.Connected:=true;
         end
@@ -742,6 +759,7 @@ begin
       except
       end;
     end;
+
 
     (*
     if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then

@@ -44,6 +44,13 @@ begin
         inc(i);
       end;
       if place<>'' then place:=copy(place, 1, length(place)-2);
+      try
+        MainForm.BarcodeSet.Active:=false;
+        MainForm.BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''';
+        MainForm.BarcodeSet.Active:=true;
+      except
+          //on E:Exception do ShowMessage('Ошибка 0cv2324x354343: '+E.Message);
+      end;
       MainForm.ZV_TD_Query.SQL.Add('insert into zv_td2(article, barcode, name, count, count_n, place, sender, docid) values('''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+MainForm.DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+MainForm.DBGrid1.DataSource.DataSet.FieldByName('name').AsString+''', '''+Edit1.Text+''', '''', '''+place+''', '''+Auth.groupname+''', '''+MainForm.doc_num+''')');
       MainForm.ZV_TD_Query.ExecSQL;
       MainForm.Zv_Read2.Active:=false;
