@@ -19536,7 +19536,6 @@
               Font.Name = 'Times New Roman'
               Font.Style = []
               ParentFont = False
-              ExplicitLeft = 5
               object Label1: TLabel
                 Left = 21
                 Top = 5
@@ -22137,8 +22136,8 @@
                 ShowCaption = False
                 TabOrder = 0
                 object Image1: TImage
-                  Left = 885
-                  Top = 1
+                  Left = 18
+                  Top = 32
                   Width = 30
                   Height = 34
                   Margins.Left = 5
@@ -22201,7 +22200,6 @@
                   Stretch = True
                   Transparent = True
                   OnClick = Image1Click
-                  ExplicitLeft = 886
                 end
                 object BitBtn10: TBitBtn
                   Left = 18
@@ -22261,7 +22259,7 @@
                   OnClick = BitBtn12Click
                 end
                 object CombFormat: TComboBox
-                  Left = 512
+                  Left = 594
                   Top = 4
                   Width = 177
                   Height = 28
@@ -22287,7 +22285,7 @@
                     #1060#1086#1088#1084#1072#1090)
                 end
                 object CombStyle: TComboBox
-                  Left = 699
+                  Left = 781
                   Top = 4
                   Width = 177
                   Height = 28
@@ -22358,6 +22356,15 @@
                   TabOrder = 7
                   Visible = False
                   OnClick = BitBtn43Click
+                end
+                object BitBtn44: TBitBtn
+                  Left = 497
+                  Top = 4
+                  Width = 87
+                  Height = 29
+                  Caption = #1053#1072#1087#1086#1083#1100#1085#1099#1077
+                  TabOrder = 8
+                  OnClick = BitBtn44Click
                 end
               end
               object Panel19: TPanel
@@ -23536,7 +23543,6 @@
             end
             object TabSheet15: TTabSheet
               Caption = '   '#1057#1082#1083#1072#1076'   '
-              Enabled = False
               ImageIndex = 15
               object Panel32: TPanel
                 Left = 0
@@ -23853,7 +23859,7 @@
     Left = 48
     Top = 328
     Bitmap = {
-      494C01010200C4003C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200C400580210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

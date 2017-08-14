@@ -12,7 +12,7 @@ uses
   Vcl.JumpList, System.ImageList, Vcl.WinXCtrls, Vcl.Mask, Vcl.DBCtrls, Registry,
   CPortCtl, CPort, UModelTree, Vcl.OleCtrls, SHDocVw, Vcl.AppEvnts, ComObj,
   frxPreview, ActiveX, frxDock, System.Win.ScktComp, CommCtrl, frxExportRTF,
-  frxExportPDF, frxExportHTML, frxExportImage, frxExportCSV;
+  frxExportPDF, frxExportHTML, frxExportImage, frxExportCSV, System.UITypes;
 
 type
   TDBGridCover = class(TDBGrid);
@@ -324,6 +324,7 @@ type
     doc_rep: TfrxReport;
     doc_set: TfrxDBDataset;
     BitBtn43: TBitBtn;
+    BitBtn44: TBitBtn;
     procedure FormShow(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -510,6 +511,7 @@ type
     procedure DateTimePicker5Change(Sender: TObject);
     procedure ListBox2DblClick(Sender: TObject);
     procedure BitBtn43Click(Sender: TObject);
+    procedure BitBtn44Click(Sender: TObject);
   private
     group:string;
     Half:byte;
@@ -520,6 +522,7 @@ type
     { Private declarations }
     procedure PreResize;
     function SetPoint(value:string):string;
+    function SetPoint2(value:string):string;
     procedure SaveReg();
   public
 
@@ -625,6 +628,7 @@ procedure TMainForm.BitBtn12Click(Sender: TObject);
 var i,j:integer;
     dir:string;
 begin
+  FormatSettings.DecimalSeparator:=',';
   dir:=ExtractFilePath(ParamStr(0));
   if ((CombFormat.Text<>'') and (CombStyle.Text<>'')) then
   begin
@@ -1234,6 +1238,7 @@ begin
   while not DBGrid8.DataSource.DataSet.Eof do
   begin
     article:=DBGrid8.DataSource.DataSet.FieldByName('article').AsString;
+    MyPlace:=TStringList.Create;
     //Поиск мест хранения
 
         try
@@ -1254,7 +1259,7 @@ begin
             begin
 
               List:=TStringList.Create;
-              MyPlace:=TStringList.Create;
+
               Place:='';
               Sklad_Query.First;
               while not Sklad_Query.Eof do
@@ -1459,84 +1464,32 @@ begin
     while Exceles.Cells[i,2].Text<>'' do
     begin
       temp:='';
-      try
-        BarcodeSet.Active:=false;
-        BarcodeSet.CommandText:='select d.article, s.barcode from supermag.smstoreunits s, supermag.smcard d where d.article = s.article and d.article='''+Exceles.Cells[i,2].Text+'''';
-        BarcodeSet.Active:=true;
-      except
-      end;
 
-      try
-        BarcodeSet.First;
-        while not BarcodeSet.Eof do
-        begin
-          if Access.Connected then
-          begin
-            try
-              Place_Query.Active:=false;
-              Place_Query.SQL.Clear;
-              Place_Query.SQL.Add('select clArticle, clPlace from tblNaserver where clStrihkod='''+BarcodeSet.FieldByName('barcode').AsString+'''');
-              Place_Query.Active:=true;
-            except
-            end;
-          end
-          else
-          begin
-            try
-              Access.Connected:=true;
-              Place_Query.Active:=false;
-              Place_Query.SQL.Clear;
-              Place_Query.SQL.Add('select clArticle, clPlace from tblNaserver where clStrihkod='''+BarcodeSet.FieldByName('barcode').AsString+'''');
-              Place_Query.Active:=true;
-            except
-            end;
-          end;
-          try
-            Place_Query.First;
-            while not Place_Query.Eof do
-            begin
-              temp:=temp+';'+Place_Query.FieldByName('clPlace').AsString;
-              Place_Query.Next;
-            end;
-          except
-          end;
-          BarcodeSet.Next;
-        end;
+      RadioButton1.Checked:=true;
+      FindEdit.Text:= Exceles.Cells[i,2].Text;
+      Search.Click;
 
-        List:=TStringList.Create;
-        List.Duplicates:=dupIgnore;
-        List.Delimiter:=';';
-        List.DelimitedText:=temp;
+      if DBGrid1.DataSource.DataSet.FieldByName('article').AsString=Exceles.Cells[i,2].Text then
+      begin
 
-        PList:=TStringList.Create;
-        PList.Duplicates:=dupIgnore;
         k:=0;
-        while k<>List.Count do
+        while k<>clPlace.Count do
         begin
-          if PList.IndexOf(List.Strings[k])=-1 then PList.Add(List.Strings[k]);
+          Exceles.Cells[i,7].Value:=Exceles.Cells[i,7].Text+clPlace.Items.Strings[k]+' | ';
           inc(k);
         end;
-
-      except
-      end;
-
-      k:=0;
-      while k<>PList.Count do
-      begin
-        Exceles.Cells[i,7].Value:=Exceles.Cells[i,7].Text+PList.Strings[k]+' | ';
-        inc(k);
-      end;
-      //
-      try
-        Sklad_Query.Active:=false;
-        Sklad_Query.SQL.Clear;
-        Sklad_Query.SQL.Add('select g.article, g.quantity from smgoods g where g.article='''+Exceles.Cells[i,2].Text+''' and g.storeloc=''19''');
-        Sklad_Query.Active:=true;
-      except
-      end;
-      try
-        if ((Sklad_Query.FieldByName('article').AsString=Exceles.Cells[i,2].Text) and (Sklad_Query.FieldByName('quantity').AsString<>'')) then Exceles.Cells[i,6].Value:=Sklad_Query.FieldByName('quantity').AsString;
-      except
+        //
+        try
+          Sklad_Query.Active:=false;
+          Sklad_Query.SQL.Clear;
+          Sklad_Query.SQL.Add('select g.article, g.quantity from smgoods g where g.article='''+Exceles.Cells[i,2].Text+''' and g.storeloc=''19''');
+          Sklad_Query.Active:=true;
+        except
+        end;
+        try
+          if ((Sklad_Query.FieldByName('article').AsString=Exceles.Cells[i,2].Text) and (Sklad_Query.FieldByName('quantity').AsString<>'')) then Exceles.Cells[i,6].Value:=Sklad_Query.FieldByName('quantity').AsString;
+        except
+        end;
       end;
       //
       inc(i);
@@ -1911,6 +1864,67 @@ begin
   except
     on E:Exception do ShowMessage('Импорт данных не был завершен!'+#13+'Ошибка: '+E.Message+'.');
   end;
+end;
+
+procedure TMainForm.BitBtn44Click(Sender: TObject);
+var mk_r, mk_k, price, plosh:string;
+begin
+  FormatSettings.DecimalSeparator:=',';
+  try
+    ZPC_Query.Active:=false;
+    ZPC_Query.SQL.Clear;
+    ZPC_Query.SQL.Add('select * from info_check where groupid='''+Auth.groupid+'''');
+    ZPC_Query.Active:=true;
+  except
+    ShowMessage('Извините ошибка!');
+    Exit;
+  end;
+  ZPC_Query.First;
+  while not ZPC_Query.Eof do
+  begin
+    mk_r:='';
+    mk_k:='';
+    plosh:='';
+    price:='';
+    try
+      price:=SetPoint2(ZPC_Query.FieldByName('price_d').AsString);
+      plosh:=SetPoint2(ZPC_Query.FieldByName('plosh').AsString);
+      try
+        mk_r:=GetRub(FloatToStr(RoundTo(StrToFloat(price)/StrToFloat(plosh),-2)));
+      except
+        On E:Exception do
+        begin
+          ShowMessage(E.Message);
+          mk_r:='0';
+        end;
+
+      end;
+      try
+        mk_k:=GetCop(FloatToStr(RoundTo(StrToFloat(price)/StrToFloat(plosh),-2)));
+        if length(mk_k)=1 then mk_k:=mk_k+'0';
+
+      except
+        On E:Exception do
+        begin
+          ShowMessage(E.Message);
+          mk_k:='0';
+        end;
+      end;
+      EtiketQuery.Active:=false;
+      EtiketQuery.SQL.Clear;
+      EtiketQuery.SQL.Add('update info_check set price_mk_r='''+mk_r+''', price_mk_k='''+mk_k+''' where article='''+ZPC_Query.FieldByName('article').AsString+''' and groupid='''+Auth.groupid+'''');
+      EtiketQuery.ExecSQL;
+    except
+    end;
+    ZPC_Query.Next;
+  end;
+      CheckTable.Active:=false;
+      CheckTable.Active:=true;
+      CheckTable.Filtered:=false;
+      CheckTable.Filter:='groupid='''+Auth.groupid+'''';
+      CheckTable.Filtered:=true;
+  ShowMessage('Готово!');
+
 end;
 
 procedure TMainForm.BitBtn4Click(Sender: TObject);
@@ -2950,6 +2964,7 @@ begin
               List:=TStringList.Create;
               Place:='';
               Kolish:='';
+
               Sklad_Query.First;
               while not Sklad_Query.Eof do
               begin
@@ -2988,6 +3003,28 @@ begin
               end;
 
               if (Auth.ServerDB.Text = 'MILE_MINSK') then
+              begin
+                try
+                  Place_Query3.Active:=false;
+                  Place_Query3.SQL.Clear;
+                  Place_Query3.SQL.Add('select place, count from place_sklad where article = '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+'''');
+                  Place_Query3.Active:=true;
+                except
+                  on E:Exception do ShowMessage('Ошибка #3: '+E.Message);
+                end;
+
+                if Place_Query3.RecordCount>0 then
+                begin
+                  Place:=Place+';'+Place_Query3.FieldByName('place').AsString;
+                  try
+                    Kolish:=FloatToStr(RoundTo((StrToFloat(Kolish)+StrToFloat(Place_Query3.FieldByName('count').AsString)),-3));
+                  except
+                  end;
+                end;
+              end;
+
+
+              if (Auth.ServerDB.Text = 'MILE_KG') then
               begin
                 try
                   Place_Query3.Active:=false;
@@ -3187,13 +3224,14 @@ begin
 end;
 
 procedure TMainForm.DBGrid1DblClick(Sender: TObject);
-var amount, amount_d, amount_color, price_dr, price_dk: Currency;
+var amount, amount_d, amount_color, price_dr, price_dk, lin: Currency;
     size, size_2, color, plosh, count_upak, _class, trademark:string;
     amount_string, price_sh, price_mk, price_up, dop_info:string;
     price_sh_r, price_sh_k, price_mk_r, price_mk_k, price_up_r, price_up_k:string;
-    srok, p_width, pr_width, user_mp, sost:string;
+    srok, p_width, pr_width, user_mp, sost, lin1, lin2:string;
     tmp:string;
     goodkop:string;
+    MSQL:AnsiString;
     i:integer; ost_tov, ost_temp:string;
     SQL_TOV:string;
 begin
@@ -3410,6 +3448,9 @@ begin
         dop_info:='';
         srok:='';
         user_mp:='';
+        lin1:='';
+        lin2:='';
+        lin:=0;
         p_width:='';
         sost:='';
         pr_width:='';
@@ -3529,12 +3570,36 @@ begin
                         amount_d:=0;
                       end;
                       try
+                        if user_mp<>'' then
+                        begin
+                          try
+                            lin:=amount_d/StrToFloat(user_mp);
+                          except
+                            lin:=0;
+                          end;
+                          try
+                            lin1:=FloatToStr(Trunc(RoundTo(PriceSet.FieldByName('price').AsFloat*StrToFloat(user_mp),-2)));
+                          except
+                            lin1:='0';
+                          end;
+                          try
+                            lin2:=FloatToStr(Frac(RoundTo(PriceSet.FieldByName('price').AsFloat*StrToFloat(user_mp),-2))*100);
+                            if length(lin2)=1 then lin2:='0'+lin2;
+                          except
+                            lin2:='0';
+                          end;
+                        end;
+                      except
+
+                      end;
+                      try
                         price_dr:=Trunc(PriceSet.FieldByName('price').AsFloat);
                       except
                         price_dr:=0;
                       end;
                       try
                         price_dk:=Frac(PriceSet.FieldByName('price').AsFloat)*100;
+
                       except
                         price_dk:=0;
                       end;
@@ -3578,6 +3643,7 @@ begin
                 price_sh_r:='0';
                 price_sh_k:='0';
               end;
+
               try
                 amount_color:=RoundTo(amount/StrToFloat(StringReplace(plosh, ',', '.',[rfReplaceAll, rfIgnoreCase])),-2);
                 amount_color:=RoundTo(amount_color/10000,-2);
@@ -3598,6 +3664,7 @@ begin
                 price_mk_r:='0';
                 price_mk_k:='0';
               end;
+
               try
                 price_up_r:=VarToStr(price_dr);
                 price_up_k:=VarToStr(price_dk);
@@ -3619,10 +3686,14 @@ begin
 
               CheckQuery.Active:=false;
               CheckQuery.SQL.Clear;
-              CheckQuery.SQL.Add('insert into info_check(`groupid`, `article`, `barcode`, `name`, `price`, `price_d`, `em`,');
-              CheckQuery.SQL.Add(' `country`, `memo`, `old_price`, `action_name`, `magazin`, `size`, `color`, `plosh`, `count_upak`, `class`, `trademark`, `price_mk`, `price_sh`, `price_up`, ');
-              CheckQuery.SQL.Add(' `dop_info`, `price_dr`, `price_dk`,`srok`,`p_width`,`pr_width`, `price_sh_r`, `price_sh_k`, `price_mk_r`, `price_mk_k`, `price_up_r`, `price_up_k`, `user_mp`, `sost`) ');
-              CheckQuery.SQL.Add('values('''+Auth.groupid+''', '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+noBadChar(SQLString(DBGrid1.DataSource.DataSet.FieldByName('name').AsString))+''', '''+FloatToStrF(amount, ffNumber, 10, 0)+''', '''+strik(FloatToStrF(amount_d, ffNumber, 10, 2))+''', '''+DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+DBGrid1.DataSource.DataSet.FieldByName('country').AsString+''', '''', '''', '''', '''+Auth.magazin+''', '''+size+''', '''+color+''', '''+plosh+''', '''+count_upak+''', '''+_class+''', '''+trademark+''', '''+price_mk+''', '''+price_sh+''', '''+price_up+''', '''+dop_info+''', '''+strik(FloatToStrF(price_dr, ffNumber, 10, 0))+''', '''+goodkop+''','''+srok+''','''+p_width+''','''+pr_width+''', '''+price_sh_r+''', '''+price_sh_k+''', '''+price_mk_r+''', '''+price_mk_k+''', '''+price_up_r+''', '''+price_up_k+''', '''+user_mp+''', '''+sost+''')');
+              CheckQuery.SQL.Add('insert into info_check(`groupid`, `article`, `barcode`, `name`, `price`, `price_d`, `em`, ');
+              CheckQuery.SQL.Add('`country`, `memo`, `old_price`, `action_name`, `magazin`, `size`, `color`, `plosh`, `count_upak`, ');
+              CheckQuery.SQL.Add('`class`, `trademark`, `price_mk`, `price_sh`, `price_up`, ');
+              CheckQuery.SQL.Add('`dop_info`, `price_dr`, `price_dk`,`srok`,`p_width`,`pr_width`, `price_sh_r`, ');
+              CheckQuery.SQL.Add('`price_sh_k`, `price_mk_r`, `price_mk_k`, `price_up_r`, `price_up_k`, `user_mp`, `sost`, ');
+              CheckQuery.SQL.Add('`lin1`, `lin2`)');
+              CheckQuery.SQL.Add(' values('''+Auth.groupid+''', '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''',');
+              CheckQuery.SQL.Add(' '''+noBadChar(SQLString(DBGrid1.DataSource.DataSet.FieldByName('name').AsString))+''', '''+FloatToStrF(amount, ffNumber, 10, 0)+''', '''+strik(FloatToStrF(amount_d, ffNumber, 10, 2))+''', '''+DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+DBGrid1.DataSource.DataSet.FieldByName('country').AsString+''', '''', '''', '''', '''+Auth.magazin+''', '''+size+''', '''+color+''', '''+plosh+''', '''+count_upak+''', '''+_class+''', '''+trademark+''', '''+price_mk+''', '''+price_sh+''', '''+price_up+''', '''+dop_info+''', '''+strik(FloatToStrF(price_dr, ffNumber, 10, 0))+''', '''+goodkop+''','''+srok+''','''+p_width+''','''+pr_width+''', '''+price_sh_r+''', '''+price_sh_k+''', '''+price_mk_r+''', '''+price_mk_k+''', '''+price_up_r+''', '''+price_up_k+''', '''+user_mp+''', '''+sost+''', '''+lin1+''', '''+lin2+''')');
               CheckQuery.ExecSQL;
               CheckTable.Active:=false;
               CheckTable.Active:=true;
@@ -3665,8 +3736,12 @@ begin
               CheckQuery.SQL.Clear;
               CheckQuery.SQL.Add('insert into info_check(`groupid`, `article`, `barcode`, `name`, `price`, `price_d`, `em`,');
               CheckQuery.SQL.Add(' `country`, `memo`, `old_price`, `action_name`, `magazin`, `size`, `color`, `plosh`, `count_upak`, ');
-              CheckQuery.SQL.Add(' `class`, `trademark`, `price_mk`, `price_sh`, `price_up`, `dop_info`, `price_dr`, `price_dk`,`srok`,`p_width`,`pr_width`, `price_sh_r`, `price_sh_k`, `price_mk_r`, `price_mk_k`, `price_up_r`, `price_up_k`, `user_mp`, `sost`)');
-              CheckQuery.SQL.Add(' values('''+Auth.groupid+''', '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', '''+noBadChar(SQLString(DBGrid1.DataSource.DataSet.FieldByName('name').AsString))+''', '''+FloatToStrF(amount, ffNumber, 10, 0)+''', '''+strik(FloatToStrF(amount_d, ffNumber, 10, 2))+''', '''+DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+DBGrid1.DataSource.DataSet.FieldByName('country').AsString+''', '''', '''', '''', '''+Auth.magazin+''', '''+size+''', '''+color+''', '''+plosh+''', '''+count_upak+''', '''+_class+''', '''+trademark+''', '''+price_mk+''', '''+price_sh+''', '''+price_up+''', '''+dop_info+''', '''+strik(FloatToStrF(price_dr, ffNumber, 10, 0))+''', '''+goodkop+''','''+srok+''','''+p_width+''','''+pr_width+''', '''+price_sh_r+''', '''+price_sh_k+''', '''+price_mk_r+''', '''+price_mk_k+''', '''+price_up_r+''', '''+price_up_k+''', '''+user_mp+''', '''+sost+''')');
+              CheckQuery.SQL.Add(' `class`, `trademark`, `price_mk`, `price_sh`, `price_up`, ');
+              CheckQuery.SQL.Add(' `dop_info`, `price_dr`, `price_dk`,`srok`,`p_width`,`pr_width`, `price_sh_r`, `price_sh_k`, ');
+              CheckQuery.SQL.Add(' `price_mk_r`, `price_mk_k`, `price_up_r`, `price_up_k`, ');
+              CheckQuery.SQL.Add(' `user_mp`, `sost`, `lin1`, `lin2`) ');
+              CheckQuery.SQL.Add(' values('''+Auth.groupid+''', '''+DBGrid1.DataSource.DataSet.FieldByName('article').AsString+''', '''+DBGrid2.DataSource.DataSet.FieldByName('barcode').AsString+''', ');
+              CheckQuery.SQL.Add(' '''+noBadChar(SQLString(DBGrid1.DataSource.DataSet.FieldByName('name').AsString))+''', '''+FloatToStrF(amount, ffNumber, 10, 0)+''', '''+strik(FloatToStrF(amount_d, ffNumber, 10, 2))+''', '''+DBGrid1.DataSource.DataSet.FieldByName('mesname').AsString+''', '''+DBGrid1.DataSource.DataSet.FieldByName('country').AsString+''', '''', '''', '''', '''+Auth.magazin+''', '''+size+''', '''+color+''', '''+plosh+''', '''+count_upak+''', '''+_class+''', '''+trademark+''', '''+price_mk+''', '''+price_sh+''', '''+price_up+''', '''+dop_info+''', '''+strik(FloatToStrF(price_dr, ffNumber, 10, 0))+''', '''+goodkop+''','''+srok+''','''+p_width+''','''+pr_width+''', '''+price_sh_r+''', '''+price_sh_k+''', '''+price_mk_r+''', '''+price_mk_k+''', '''+price_up_r+''', '''+price_up_k+''', '''+user_mp+''', '''+sost+''', '''+lin1+''', '''+lin2+''') ');
               CheckQuery.ExecSQL;
               CheckTable.Active:=false;
               CheckTable.Active:=true;
@@ -6399,6 +6474,23 @@ begin
   while i<=length(value) do
   begin
     if copy(value, i, 1)<>',' then temp:=temp+copy(value, i, 1) else temp:=temp+'.';
+    inc(i);
+  end;
+  if temp<>'' then
+  begin
+    Result:=temp;
+  end
+  else Result:='0';
+end;
+
+function TMainForm.SetPoint2(value: string): string;
+var temp:string; i:integer;
+begin
+  i:=1;
+  temp:='';
+  while i<=length(value) do
+  begin
+    if copy(value, i, 1)<>'.' then temp:=temp+copy(value, i, 1) else temp:=temp+',';
     inc(i);
   end;
   if temp<>'' then

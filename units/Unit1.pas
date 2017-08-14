@@ -93,7 +93,7 @@ type
 var
   Auth: TAuth;
 
-const ver='2.0.0.9';
+const ver='2.0.3.0';
 
 implementation
 
@@ -749,9 +749,9 @@ begin
     if (Auth.ServerDB.Text='MILE_MINSK') then
     begin
       try
-        if FileExists('\\dt-vm-1\info\InfoDataBase.mdb') then
+        if FileExists('\\dt-sh\obmen\info\InfoDataBase.mdb') then
         begin
-          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
+          MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Data Source=\\dt-sh\obmen\info\InfoDataBase.mdb;Persist Security Info=True';
           //MainForm.Access.ConnectionString:='Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=\\dt-vm-1\info\InfoDataBase.mdb;Persist Security Info=True';
           MainForm.Access.Connected:=true;
         end
@@ -759,7 +759,6 @@ begin
       except
       end;
     end;
-
 
     (*
     if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then
