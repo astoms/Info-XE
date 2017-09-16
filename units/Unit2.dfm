@@ -19166,7 +19166,6 @@
               Width = 103
               Height = 20
               Caption = #1052#1077#1089#1090#1086' '#1093#1088#1072#1085#1077#1085#1080#1103
-              Enabled = False
               TabOrder = 3
               OnClick = RadioButton4Click
             end
@@ -23280,7 +23279,7 @@
                   BevelOuter = bvNone
                   Date = 42578.666853148150000000
                   Time = 42578.666853148150000000
-                  MaxDate = 43100.999988425920000000
+                  MaxDate = 43100.999988425930000000
                   MinDate = 42370.000000000000000000
                   TabOrder = 2
                   Visible = False
@@ -23859,7 +23858,7 @@
     Left = 48
     Top = 328
     Bitmap = {
-      494C01010200C400580210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200C4007C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -26580,5 +26579,11 @@
     BCDToCurrency = False
     Left = 672
     Top = 501
+  end
+  object Place_Query4: TADOQuery
+    Connection = Access
+    Parameters = <>
+    Left = 736
+    Top = 664
   end
 end

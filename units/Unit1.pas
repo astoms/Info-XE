@@ -93,7 +93,7 @@ type
 var
   Auth: TAuth;
 
-const ver='2.0.3.0';
+const ver='2.0.4.4';
 
 implementation
 
@@ -746,6 +746,7 @@ begin
       end;
     end;
 
+    {
     if (Auth.ServerDB.Text='MILE_MINSK') then
     begin
       try
@@ -759,6 +760,7 @@ begin
       except
       end;
     end;
+    }
 
     (*
     if ((Auth.ServerDB.Text='ASTOMS7') or (Auth.ServerDB.Text='astoms7')) then
